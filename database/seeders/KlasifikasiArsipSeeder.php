@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use App\Models\KlasifikasiArsip;
-use PhpOffice\PhpSpreadsheet\IOFactory;
 use Illuminate\Support\Facades\Log;
 
 class KlasifikasiArsipSeeder extends Seeder
@@ -14,19 +13,119 @@ class KlasifikasiArsipSeeder extends Seeder
      */
     public function run(): void
     {
-        $filePath = database_path('seeders/KA-JRA- SKKAAD 2026.xlsx');
-        
-        if (!file_exists($filePath)) {
-            $this->command->error("Excel file not found at: {$filePath}");
-            return;
-        }
+        // Try CSV first (preferred), fallback to Excel
+        $csvPath = database_path('seeders/data/klasifikasi_arsip.csv');
+        $excelPath = database_path('seeders/KA-JRA- SKKAAD 2026.xlsx');
 
-        $this->command->info("Loading Excel file: {$filePath}...");
-        
+        if (file_exists($csvPath)) {
+            $this->seedFromCsv($csvPath);
+        } elseif (file_exists($excelPath)) {
+            $this->seedFromExcel($excelPath);
+        } else {
+            $this->command->error("File not found: {$csvPath} or {$excelPath}");
+        }
+    }
+
+    /**
+     * Seed from CSV file
+     */
+    private function seedFromCsv(string $filePath): void
+    {
+        $this->command->info("Loading CSV file: {$filePath}...");
+
         try {
-            $spreadsheet = IOFactory::load($filePath);
+            $handle = fopen($filePath, 'r');
+            if (!$handle) {
+                $this->command->error("Cannot open CSV file: {$filePath}");
+                return;
+            }
+
+            // Read header
+            $header = fgetcsv($handle);
+            if (!$header) {
+                $this->command->error("CSV file is empty or invalid");
+                fclose($handle);
+                return;
+            }
+
+            // Normalize headers
+            $header = array_map('trim', $header);
+            $expectedHeaders = [
+                'kode', 'nama', 'parent_kode', 'retensi_aktif_tahun',
+                'retensi_inaktif_tahun', 'nasib_akhir', 'keamanan',
+                'hak_akses', 'dasar_pertimbangan', 'unit_pengolah'
+            ];
+
+            $count = 0;
+            $insertedCodes = [];
+
+            while (($row = fgetcsv($handle)) !== false) {
+                if (count($row) < count($expectedHeaders)) {
+                    // Pad row if needed
+                    $row = array_pad($row, count($expectedHeaders), '');
+                }
+
+                $data = array_combine($expectedHeaders, $row);
+
+                $code = trim($data['kode'] ?? '');
+                $name = trim($data['nama'] ?? '');
+                $parentCode = trim($data['parent_kode'] ?? '');
+
+                if (!$code || !$name) {
+                    continue;
+                }
+
+                // Resolve parent_id from parent_kode
+                $parentId = null;
+                if ($parentCode && isset($insertedCodes[$parentCode])) {
+                    $parentId = $insertedCodes[$parentCode];
+                }
+
+                // Parse numeric fields
+                $retensiAktif = (int) ($data['retensi_aktif_tahun'] ?? 0);
+                $retensiInaktif = (int) ($data['retensi_inaktif_tahun'] ?? 0);
+                $nasibAkhir = $this->parseNasibAkhir($data['nasib_akhir'] ?? '');
+
+                $record = KlasifikasiArsip::updateOrCreate(
+                    ['kode' => $code],
+                    [
+                        'nama' => $name,
+                        'parent_id' => $parentId,
+                        'retensi_aktif_tahun' => $retensiAktif,
+                        'retensi_inaktif_tahun' => $retensiInaktif,
+                        'nasib_akhir' => $nasibAkhir,
+                        'keamanan' => $data['keamanan'] ?: null,
+                        'hak_akses' => $data['hak_akses'] ?: null,
+                        'dasar_pertimbangan' => $data['dasar_pertimbangan'] ?: null,
+                        'unit_pengolah' => $data['unit_pengolah'] ?: null,
+                    ]
+                );
+
+                $insertedCodes[$code] = $record->id;
+                $count++;
+            }
+
+            fclose($handle);
+
+            $this->command->info("✅ Seeding Klasifikasi Arsip (CSV) selesai! Total: {$count}");
+
+        } catch (\Exception $e) {
+            $this->command->error("Error seeding klasifikasi from CSV: " . $e->getMessage());
+            Log::error($e);
+        }
+    }
+
+    /**
+     * Seed from Excel file (fallback)
+     */
+    private function seedFromExcel(string $filePath): void
+    {
+        $this->command->info("Loading Excel file: {$filePath}...");
+
+        try {
+            $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($filePath);
             $sheet = $spreadsheet->getSheetByName('KA-JRA-SKKAAD');
-            
+
             if (!$sheet) {
                 $this->command->error("Sheet 'KA-JRA-SKKAAD' not found in the Excel file!");
                 return;
@@ -35,7 +134,7 @@ class KlasifikasiArsipSeeder extends Seeder
             $highestRow = $sheet->getHighestRow();
             $this->command->info("Reading {$highestRow} rows from sheet 'KA-JRA-SKKAAD'...");
 
-            $insertedCodes = []; // To cache code => ID for parent lookup
+            $insertedCodes = [];
             $count = 0;
 
             for ($row = 5; $row <= $highestRow; $row++) {
@@ -44,7 +143,7 @@ class KlasifikasiArsipSeeder extends Seeder
                 $colC = trim($sheet->getCell('C' . $row)->getValue() ?? '');
                 $colD = trim($sheet->getCell('D' . $row)->getValue() ?? '');
                 $colE = trim($sheet->getCell('E' . $row)->getValue() ?? '');
-                
+
                 $colF = trim($sheet->getCell('F' . $row)->getValue() ?? ''); // Retensi Aktif
                 $colG = trim($sheet->getCell('G' . $row)->getValue() ?? ''); // Retensi Inaktif
                 $colH = trim($sheet->getCell('H' . $row)->getValue() ?? ''); // Nasib Akhir
@@ -76,7 +175,7 @@ class KlasifikasiArsipSeeder extends Seeder
                 }
 
                 if (!$code || !$name) {
-                    continue; // Skip rows that are not classifications
+                    continue;
                 }
 
                 // Resolve parent_id
@@ -111,10 +210,10 @@ class KlasifikasiArsipSeeder extends Seeder
                 $count++;
             }
 
-            $this->command->info("✅ Seeding Klasifikasi Arsip selesai! Total data berhasil dimasukkan/diperbarui: {$count}");
+            $this->command->info("✅ Seeding Klasifikasi Arsip (Excel) selesai! Total: {$count}");
 
         } catch (\Exception $e) {
-            $this->command->error("Error seeding klasifikasi: " . $e->getMessage());
+            $this->command->error("Error seeding klasifikasi from Excel: " . $e->getMessage());
             Log::error($e);
         }
     }
