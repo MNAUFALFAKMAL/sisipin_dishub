@@ -2,39 +2,53 @@
 
 namespace App\Http\Requests;
 
-use App\Enums\Role;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rules\Password;
+use Illuminate\Validation\Rule;
 
 class StoreUserRequest extends FormRequest
 {
+    /**
+     * Determine if the user is authorized to make this request.
+     */
     public function authorize(): bool
     {
-        return auth()->user()?->isSuperAdmin();
+        return true;
     }
 
+    /**
+     * Get the validation rules that apply to the request.
+     *
+     * @return array<string, \Illuminate\Contracts\Validation\Rule|array|string>
+     */
     public function rules(): array
     {
         return [
-            'name'      => ['required', 'string', 'max:150'],
-            'username'  => ['required', 'string', 'max:100', 'unique:users,email'],
-            'password'  => ['required', Password::min(8)->letters()->numbers()],
-            'role'      => ['required', Role::validationRules()],
-            'bidang_id' => ['nullable', 'exists:bidangs,id'],
-            'is_active' => ['nullable', 'boolean'],
+            'name'       => ['required', 'string', 'max:255'],
+            'username'   => ['required', 'string', 'max:100', 'unique:users,email'],
+            'password'   => ['required', 'string', 'min:8', 'confirmed'],
+            'peran_id'   => ['required', 'exists:perans,id'],
+            'bidang_id'  => ['nullable', 'exists:bidangs,id'],
+            'is_active'  => ['boolean'],
         ];
     }
 
+    /**
+     * Get custom messages for validator errors.
+     *
+     * @return array<string, string>
+     */
     public function messages(): array
     {
         return [
-            'name.required'      => 'Nama lengkap wajib diisi.',
-            'username.required'  => 'Username wajib diisi.',
-            'username.unique'    => 'Username sudah digunakan oleh pengguna lain.',
-            'password.required'  => 'Password wajib diisi.',
-            'role.required'      => 'Role pengguna wajib dipilih.',
-            'role.in'            => 'Role tidak valid.',
-            'bidang_id.exists'   => 'Bidang yang dipilih tidak ditemukan.',
+            'name.required'       => 'Nama wajib diisi.',
+            'username.required'   => 'Username/Email wajib diisi.',
+            'username.unique'     => 'Username/Email sudah terdaftar.',
+            'password.required'   => 'Password wajib diisi.',
+            'password.min'        => 'Password minimal 8 karakter.',
+            'password.confirmed'  => 'Konfirmasi password tidak cocok.',
+            'peran_id.required'   => 'Peran wajib dipilih.',
+            'peran_id.exists'     => 'Peran tidak valid.',
+            'bidang_id.exists'    => 'Bidang tidak valid.',
         ];
     }
 }

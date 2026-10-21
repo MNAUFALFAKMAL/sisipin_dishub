@@ -19,7 +19,7 @@ class TahunArsipTest extends TestCase
 
     public function test_super_admin_can_store_tahun()
     {
-        $admin = User::factory()->create(['role' => 'super_admin']);
+        $admin = User::factory()->superAdmin()->create();
 
         $response = $this->actingAs($admin)->from('/dashboard')
             ->post('/tahun-arsip', ['tahun' => 2027]);
@@ -31,7 +31,7 @@ class TahunArsipTest extends TestCase
 
     public function test_duplicate_tahun_is_rejected()
     {
-        $admin = User::factory()->create(['role' => 'super_admin']);
+        $admin = User::factory()->superAdmin()->create();
         TahunArsip::create(['tahun' => 2026]);
 
         $response = $this->actingAs($admin)
@@ -43,7 +43,7 @@ class TahunArsipTest extends TestCase
 
     public function test_invalid_tahun_is_rejected()
     {
-        $admin = User::factory()->create(['role' => 'super_admin']);
+        $admin = User::factory()->superAdmin()->create();
 
         $this->actingAs($admin)->post('/tahun-arsip', ['tahun' => 1899])
             ->assertSessionHasErrors('tahun');
@@ -65,7 +65,7 @@ class TahunArsipTest extends TestCase
 
     public function test_super_admin_can_destroy_empty_tahun()
     {
-        $admin = User::factory()->create(['role' => 'super_admin']);
+        $admin = User::factory()->superAdmin()->create();
         $arsip = TahunArsip::create(['tahun' => 2028]);
 
         $response = $this->actingAs($admin)->from('/dashboard')
@@ -78,7 +78,7 @@ class TahunArsipTest extends TestCase
 
     public function test_tahun_with_surat_cannot_be_destroyed()
     {
-        $admin = User::factory()->create(['role' => 'super_admin']);
+        $admin = User::factory()->superAdmin()->create();
         TahunArsip::create(['tahun' => 2026]);
         SuratMasuk::create([
             'no_surat'       => '900/1/SM',
