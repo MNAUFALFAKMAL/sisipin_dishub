@@ -1,0 +1,43 @@
+/* ── Design Tokens ────────────────────────────────────────────── */
+@theme {
+  --color-brand: #1A365D;
+  --color-brand-dark: #0F1C3F;
+  --color-brand-light: #3b82f6;
+  --color-accent: #0d6efd;
+  --color-accent-hover: #0b5ed7;
+
+  --color-siger: #f59e0b;
+  --color-siger-hover: #d97706;
+  --color-siger-light: #fef3c7;
+
+  --color-page-background: #F7FAFC;
+  --color-primary-text: #2D3748;
+  --color-link-blue: #0000ee;
+  --color-border-subtle: #d9d9d9;
+  --color-page-background-dark: #000000;
+  --color-primary-text-dark: #f2f2f2;
+  --color-link-blue-dark: #82b6ff;
+  --color-muted-text-dark: #b6b6b6;
+
+  --radius-xs: 6px;
+  --radius-sm: 16px;
+  --radius-md: 50px;
+  --radius-lg: 800px;
+}
+
+:root {
+  --brand: #1A365D;
+  --brand-dark: #0F1C3F;
+  --brand-light: #3b82f6;
+  --accent: #0d6efd;
+  --accent-hover: #0b5ed7;
+  --siger: #f59e0b;
+  --siger-hover: #d97706;
+  --siger-light: #fef3c7;
+
+  --page-bg: #F7FAFC;
+  --card-bg: #ffffff;
+  --text-primary: #2D3748;
+  --text-secondary: #64748b;
+  --border-subtle: #dee2e6;
+}

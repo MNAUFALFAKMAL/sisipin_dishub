@@ -1,0 +1,33 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('klasifikasi_arsips', function (Blueprint $table) {
+            $table->id();
+            $table->string('kode')->unique();
+            $table->string('nama');
+            $table->foreignId('parent_id')->nullable()->constrained('klasifikasi_arsips')->onDelete('cascade');
+            $table->integer('retensi_aktif_tahun')->default(0);
+            $table->integer('retensi_inaktif_tahun')->default(0);
+            $table->enum('nasib_akhir', ['musnah', 'permanen', 'dinilai'])->default('dinilai');
+            $table->timestamps();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('klasifikasi_arsips');
+    }
+};
