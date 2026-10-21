@@ -1,73 +1,267 @@
 # SISIPIN DISHUB
 
-Sistem Informasi Arsip Internal untuk Subbagian Umum dan Kepegawaian
-Dinas Perhubungan Provinsi Lampung.
+**Sistem Informasi Arsip Dinamis** — Dinas Perhubungan Provinsi Lampung
 
-> **Status:** repositori baru. Belum ada kode aplikasi — pengembangan dimulai dari nol
-> mengikuti rencana kerja (WBS) 12 minggu, 7 September – 27 November 2026.
+---
 
-## Tentang
+## Tentang Proyek
 
-SISIPIN DISHUB adalah aplikasi web untuk mencatat, mengelompokkan, dan menelusuri
-surat masuk dan surat keluar, meneruskan disposisi, serta menyusun laporan kearsipan.
-Sistem dipakai oleh dua peran (Kepala Subbagian dan Staff Subbagian), ditambah satu
-akun pengelola teknis dan halaman publik tanpa akun.
+SISIPIN DISHUB adalah aplikasi pengelolaan arsip dinas berbasis web untuk Dinas Perhubungan Provinsi Lampung. Aplikasi ini dikembangkan mengikuti standar kearsipan sesuai Pergub Lampung Nomor 16 Tahun 2023.
 
-## Rencana teknologi
+**Versi:** 1.0.0 (Development)  
+**Framework:** Laravel 13  
+**Frontend:** Tailwind CSS v3 + Alpine.js + Vite  
+**Bahasa:** PHP 8.4+  
+**Database:** MySQL / SQLite
 
-| Bagian | Pilihan |
-|---|---|
-| Kerangka kerja | Laravel 13 (PHP 8.5) |
-| Basis data | MySQL 8 / MariaDB 10.5+ |
-| Tampilan | Blade, Tailwind CSS, Alpine.js |
-| Berkas & PDF | DomPDF / mPDF, pengolah PDF |
-| Penyajian | Layanan hosting sewa (tanpa perangkat keras sendiri) |
+---
 
-## Tim dan peran
+## Prasyarat
 
-| Nama | Peran GitHub | Fokus |
-|---|---|---|
-| Muhammad Naufal Fikri Akmal | `@MNAUFALFAKMAL` | Project Manager & QA — dokumen, pengujian, rilis |
-| Nabila Ramadhani Mujahidin | `@nblable` | Backend — basis data, logika, keamanan |
-| Arta Eka Yuly Rajagukguk | `@artaeka` | Frontend — tampilan, alur, responsif |
+Sebelum menjalankan aplikasi, pastikan sistem Anda memiliki:
 
-## Alur kerja
+| Perangkat Lunak | Versi Minimum |
+|-----------------|---------------|
+| PHP | 8.3+ (direkomendasikan 8.4) |
+| Composer | 2.6+ |
+| Node.js | 20+ |
+| npm | 10+ |
+| Database | MySQL 8.0+ / MariaDB 10.6+ / SQLite |
 
-Repositori ini memakai alur bercabang: `main` hanya menerima rilis, `develop` menjadi
-tempat integrasi, dan setiap paket kerja dikerjakan pada cabang sendiri.
+Ekstensi PHP yang diperlukan: `bcmath`, `ctype`, `curl`, `dom`, `fileinfo`, `gd`, `intl`, `mbstring`, `openssl`, `pdo_mysql`, `tokenizer`, `xml`, `zip`, `zip`
 
-- **Rencana yang dibahas tim (mulai di sini):** [`docs/rencana-git-flow.md`](docs/rencana-git-flow.md)
-- Rujukan teknis aturan: [`docs/git-flow.md`](docs/git-flow.md)
-- Peta 56 paket ke cabang: [`docs/peta-paket-cabang.md`](docs/peta-paket-cabang.md)
-- Ringkasan kontribusi: [`CONTRIBUTING.md`](CONTRIBUTING.md)
-- Papan pekerjaan: [Projects SISIPIN DISHUB](https://github.com/users/MNAUFALFAKMAL/projects/1) · Issues · Milestone M1–M5
-- Jangan pernah menulis langsung ke `main` atau `develop`.
+---
 
-## Dokumen kerja
+## Instalasi
 
-| Dokumen | Isi |
-|---|---|
-| [`docs/glosarium.md`](docs/glosarium.md) | Istilah resmi untuk teks layar |
-| [`docs/matriks-uji.md`](docs/matriks-uji.md) | Matriks uji R-01…R-20 dan NF-01…NF-11 |
-| [`docs/uji/skenario-uat.md`](docs/uji/skenario-uat.md) | Skenario dan formulir uji penerimaan |
-| [`docs/panduan-pengguna.md`](docs/panduan-pengguna.md) | Buku panduan untuk Kasubbag dan Staff |
-| [`docs/pelatihan/agenda-pelatihan.md`](docs/pelatihan/agenda-pelatihan.md) | Agenda pelatihan dua sesi |
-| [`docs/serah-terima/checklist-serah-terima.md`](docs/serah-terima/checklist-serah-terima.md) | Checklist dan berita acara serah terima |
-| [`docs/rapat/2026-10-22-kickoff.md`](docs/rapat/2026-10-22-kickoff.md) | Agenda kick-off dan lembar keputusan |
+### 1. Clone Repository
 
-## Struktur cabang
+```bash
+git clone https://github.com/MNAUFALFAKMAL/sisipin_dishub.git
+cd sisipin_dishub
+```
+
+### 2. Install Dependensi PHP
+
+```bash
+composer install
+```
+
+### 3. Install Dependensi Frontend
+
+```bash
+npm install
+```
+
+### 4. Konfigurasi Environment
+
+```bash
+cp .env.example .env
+php artisan key:generate
+```
+
+Edit file `.env` dan sesuaikan konfigurasi database:
+
+```env
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=sisipin_dishub
+DB_USERNAME=your_username
+DB_PASSWORD=your_password
+```
+
+Atau gunakan SQLite untuk development:
+
+```env
+DB_CONNECTION=sqlite
+# Buat file database
+touch database/database.sqlite
+```
+
+### 5. Migrasi Database
+
+```bash
+php artisan migrate --seed
+```
+
+### 6. Build Asset Frontend
+
+**Development (dengan hot reload):**
+
+```bash
+npm run dev
+```
+
+**Production:**
+
+```bash
+npm run build
+```
+
+---
+
+## Menjalankan Aplikasi
+
+### Development Server
+
+```bash
+# Terminal 1 - Laravel server
+php artisan serve
+
+# Terminal 2 - Vite dev server (hot reload)
+npm run dev
+```
+
+Akses aplikasi di: **http://localhost:8000**
+
+---
+
+## Struktur Proyek Utama
 
 ```
-main         rilis / produksi (dilindungi)
-└── develop  integrasi harian (dilindungi)
-    ├── feature/<kode-wbs>-<ringkas>
-    ├── fix/<kode-wbs>-<ringkas>
-    ├── docs/<kode-wbs>-<ringkas>
-    ├── test/<kode-wbs>-<ringkas>
-    └── chore/<kode-wbs>-<ringkas>
-hotfix/<ringkas>   darurat, bercabang dari main
+sisipin_dishub/
+├── app/                    # Logika aplikasi (Models, Controllers, Services)
+├── bootstrap/              # Bootstrap framework
+├── config/                 # File konfigurasi
+├── database/               # Migrasi, factory, seeder
+├── docs/                   # Dokumentasi (wireframe, WBS, glosarium, dsb.)
+│   └── wireframe/          # Desain wireframe 10 layar
+├── public/                 # Asset publik & entry point
+├── resources/
+│   ├── css/                # Tailwind CSS entry (app.css)
+│   ├── js/                 # JavaScript entry (app.js, bootstrap.js)
+│   └── views/              # Blade templates
+│       ├── layouts/        # Layout utama (app.blade.php, auth.blade.php)
+│       └── welcome.blade.php  # Halaman landing
+├── routes/                 # Definisi rute (web.php, api.php)
+├── storage/                # File storage, logs, cache
+├── tests/                  # Unit & feature tests
+├── vendor/                 # Dependensi Composer
+├── .env                    # Environment configuration
+├── artisan                 # CLI Laravel
+├── composer.json           # Dependensi PHP
+├── package.json            # Dependensi Node.js
+├── tailwind.config.js      # Konfigurasi Tailwind CSS v3
+├── postcss.config.js       # Konfigurasi PostCSS
+├── vite.config.js          # Konfigurasi Vite
+└── phpunit.xml             # Konfigurasi PHPUnit
 ```
+
+---
+
+## Rute Utama (Planned)
+
+| Rute | Nama | Deskripsi |
+|------|------|-----------|
+| `/` | `home` | Halaman landing (dalam pengembangan) |
+| `/masuk` | `login` | Halaman autentikasi |
+| `/dasbor` | `dashboard` | Dasbor utama setelah login |
+| `/surat-masuk` | `surat-masuk.index` | Daftar surat masuk |
+| `/surat-keluar` | `surat-keluar.index` | Daftar surat keluar per jenis |
+| `/klasifikasi` | `klasifikasi.index` | Kelola kode klasifikasi |
+| `/laporan` | `laporan.index` | Laporan & cetak PDF |
+| `/profil` | `profil.show` | Profil & kata sandi |
+| `/tata-naskah` | `tata-naskah.index` | Tata naskah publik |
+
+---
+
+## Pengujian
+
+```bash
+# Jalankan semua test
+php artisan test
+
+# Jalankan test dengan coverage
+php artisan test --coverage
+
+# Jalankan test spesifik
+php artisan test --filter=NamaTest
+```
+
+---
+
+## Kode Standar & Linting
+
+```bash
+# PHP Code Style (Laravel Pint)
+./vendor/bin/pint
+
+# JavaScript/TypeScript Linting (jika dikonfigurasi)
+npm run lint
+```
+
+---
+
+## Deployment
+
+### Production Build
+
+```bash
+# 1. Optimize autoloader
+composer install --optimize-autoloader --no-dev
+
+# 2. Cache konfigurasi
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+
+# 3. Build asset production
+npm run build
+
+# 4. Migrasi database
+php artisan migrate --force
+```
+
+### Environment Production
+
+Pastikan `.env` production memiliki:
+
+```env
+APP_ENV=production
+APP_DEBUG=false
+APP_URL=https://domain-anda.com
+
+LOG_CHANNEL=stack
+LOG_LEVEL=error
+
+CACHE_DRIVER=redis
+SESSION_DRIVER=database
+QUEUE_CONNECTION=redis
+```
+
+---
+
+## Dokumentasi Teknis
+
+- [Wireframe & Panduan Visual](docs/wireframe/README.md)
+- [Rencana Git Flow](docs/rencana-git-flow.md)
+- [Aturan Teknis Git](docs/git-flow.md)
+- [Glosarium Istilah](docs/glosarium.md)
+- [Panduan Kontribusi](CONTRIBUTING.md)
+- [WBS Charter](docs/wbs.md)
+
+---
+
+## Tim Pengembang
+
+| Peran | Nama | GitHub |
+|-------|------|--------|
+| PM & QA | Muhammad Naufal Fikri Akmal | [@MNAUFALFAKMAL](https://github.com/MNAUFALFAKMAL) |
+| Backend | Nabila Ramadhani Mujahidin | [@nblable](https://github.com/nblable) |
+| Frontend | Arta Eka Yuly Rajagukguk | [@artaeka](https://github.com/artaeka) |
+
+---
 
 ## Lisensi
 
-Belum ditetapkan.
+Proyek ini dikembangkan untuk Dinas Perhubungan Provinsi Lampung. Hak Cipta Dilindungi Undang-Undang.
+
+---
+
+## Kontak
+
+**Dinas Perhubungan Provinsi Lampung**  
+Alamat: Jl. Gatot Subroto No. 1, Bandar Lampung  
+Email: dishub@lampungprov.go.id  
+Website: https://dishub.lampungprov.go.id

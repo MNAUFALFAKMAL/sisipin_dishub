@@ -1,0 +1,99 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom base styles */
+@layer base {
+    html {
+        @apply antialiased text-neutral-900;
+    }
+    
+    body {
+        @apply font-sans leading-normal;
+    }
+    
+    * {
+        @apply border-neutral-200;
+    }
+}
+
+/* Custom component styles */
+@layer components {
+    .btn {
+        @apply inline-flex items-center justify-center px-4 py-2 rounded-lg font-medium transition-all duration-150 ease-out focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px];
+    }
+    
+    .btn-primary {
+        @apply btn bg-primary text-white hover:bg-primary-dark focus:ring-primary;
+    }
+    
+    .btn-secondary {
+        @apply btn bg-transparent text-primary border border-primary hover:bg-primary-light focus:ring-primary;
+    }
+    
+    .btn-danger {
+        @apply btn bg-danger text-white hover:bg-red-800 focus:ring-danger;
+    }
+    
+    .btn-text {
+        @apply btn bg-transparent text-primary hover:bg-primary-light focus:ring-primary;
+    }
+    
+    .input {
+        @apply w-full px-3 py-2.5 border border-neutral-300 rounded-lg text-sm placeholder:text-neutral-400 
+               focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent
+               disabled:bg-neutral-100 disabled:cursor-not-allowed min-h-[40px];
+    }
+    
+    .input-error {
+        @apply border-danger focus:ring-danger focus:border-danger;
+    }
+    
+    .label {
+        @apply block text-sm font-medium text-neutral-900 mb-2;
+    }
+    
+    .card {
+        @apply bg-white rounded-xl shadow-sm border border-neutral-200 p-6;
+    }
+    
+    .badge {
+        @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+    }
+    
+    .badge-primary {
+        @apply badge bg-primary-light text-primary;
+    }
+    
+    .badge-success {
+        @apply badge bg-green-100 text-green-800;
+    }
+    
+    .badge-warning {
+        @apply badge bg-yellow-100 text-yellow-800;
+    }
+    
+    .badge-danger {
+        @apply badge bg-red-100 text-red-800;
+    }
+    
+    .badge-neutral {
+        @apply badge bg-neutral-100 text-neutral-600;
+    }
+}
+
+/* Custom utility styles */
+@layer utilities {
+    .scrollbar-hide {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+    
+    .scrollbar-hide::-webkit-scrollbar {
+        display: none;
+    }
+    
+    .text-balance {
+        text-wrap: balance;
+    }
+}
