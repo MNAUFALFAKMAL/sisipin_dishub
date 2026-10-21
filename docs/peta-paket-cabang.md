@@ -1,152 +1,117 @@
 # Peta Paket Kerja ke Cabang
 
-Satu baris = satu paket WBS = satu cabang = satu PR. Nama cabang memakai kode WBS
+Satu baris = satu tugas WBS = satu cabang = satu PR. Nama cabang memakai kode WBS
 sehingga issue, PR, dan rencana kerja selalu dapat dicocokkan.
 
-Dokumen ini dihasilkan dari WBS 56 paket (316 jam) dan tidak memuat keputusan baru.
-Aturan mainnya ada di [rencana-git-flow.md](rencana-git-flow.md).
+Dokumen ini diturunkan dari [`wbs.md`](wbs.md) (WBS charter, 75 tugas). Aturan
+mainnya ada di [rencana-git-flow.md](rencana-git-flow.md).
 
-| Kode | Paket | PIC | Jam | Cabang |
-|---|---|---|---:|---|
+## Ringkasan cabang
 
-## Fase 1 - Perencanaan dan Dokumen
+| Tipe | Jumlah | Contoh |
+|---|---:|---|
+| `docs/` | 25 | `docs/1.1.1-inisiasi-proyek-dan-penyusunan-project-charter` |
+| `feature/` | 28 | `feature/3.4.1-surat-masuk-crud-bidang-tujuan-klasifikasi` |
+| `test/` | 11 | `test/4.1.1-rencana-pengujian-dan-test-case-dari-skpl` |
+| `chore/` | 7 | `chore/5.1.2-deploy-aplikasi-dan-migrasi-database-produksi` |
 
-Minggu 1-3 - gerbang M1 (27 Sep)
+## Fase 1 - Perencanaan & Analisis Kebutuhan (M1)
 
-| Kode | Paket | PIC | Jam | Cabang |
-|---|---|---|---:|---|
-| 1.1 | Rapat kick-off dan konfirmasi lingkup dengan dinas | Naufal | 3 | `docs/1.1-rapat-kick-off-dan-konfirmasi-lingkup` |
-| 1.2 | Susun WBS, papan tugas, dan jadwal | Naufal | 5 | `chore/1.2-susun-wbs-papan-tugas-dan-jadwal` |
-| 1.3 | Susun Project Charter versi mitra | Naufal | 5 | `docs/1.3-susun-project-charter-versi-mitra` |
-| 1.4 | Susun SKPL versi mitra dan lampiran teknis | Naufal | 5 | `docs/1.4-susun-skpl-versi-mitra-dan-lampiran-teknis` |
-| 1.5 | Rancangan tampilan (wireframe) dan panduan visual | Arta | 6 | `feature/1.5-rancangan-tampilan-wireframe-dan-panduan` |
-| 1.6 | Daftar istilah dinas dan glosarium | Naufal | 2 | `docs/1.6-daftar-istilah-dinas-dan-glosarium` |
-| | **Subtotal fase 1** | | **26** | |
+| Kode | Paket | PIC | Prioritas | Cabang |
+|---|---|---|---|---|
+| 1.1.1 | Inisiasi proyek & penyusunan Project Charter | Naufal | inti | `docs/1.1.1-inisiasi-proyek-dan-penyusunan-project-charter` |
+| 1.1.2 | Wawancara & observasi kebutuhan dengan stakeholder Dishub | Naufal | inti | `docs/1.1.2-wawancara-dan-observasi-kebutuhan-dengan-stakeholder` |
+| 1.1.3 | Studi literatur regulasi kearsipan (SIKD, JRA SKKAAD, Permenpan RB, Perka ANRI) | Nabila | inti | `docs/1.1.3-studi-literatur-regulasi-kearsipan-sikd-jra-skkaad` |
+| 1.1.4 | Analisis sistem & alur kearsipan manual yang berjalan | Arta | inti | `docs/1.1.4-analisis-sistem-dan-alur-kearsipan-manual-yang-berjalan` |
+| 1.2.1 | Analisis kebutuhan fungsional | Nabila | inti | `docs/1.2.1-analisis-kebutuhan-fungsional` |
+| 1.2.2 | Analisis kebutuhan non-fungsional & batasan perancangan | Arta | inti | `docs/1.2.2-analisis-kebutuhan-non-fungsional-dan-batasan` |
+| 1.2.3 | Penulisan dokumen SKPL (GL01-SKPL) | Nabila | inti | `docs/1.2.3-penulisan-dokumen-skpl-gl01-skpl` |
+| 1.2.4 | Review dokumen SKPL (pemeriksa) | Arta | inti | `docs/1.2.4-review-dokumen-skpl-pemeriksa` |
+| 1.2.5 | Persetujuan SKPL oleh PM & dosen pembimbing | Naufal | inti | `docs/1.2.5-persetujuan-skpl-oleh-pm-dan-dosen-pembimbing` |
 
-## Fase 2 - Fondasi Sistem
+## Fase 2 - Perancangan Sistem (M2)
 
-Minggu 4-5 - gerbang M2 (11 Okt)
+| Kode | Paket | PIC | Prioritas | Cabang |
+|---|---|---|---|---|
+| 2.1.1 | Diagram konteks sistem | Nabila | inti | `docs/2.1.1-diagram-konteks-sistem` |
+| 2.1.2 | DFD Level 0/1 (P1 Pengguna & Hak Akses, P2 Surat Menyurat, P3 Arsip & Naskah) & P-SPEC | Nabila | inti | `docs/2.1.2-dfd-level-0-1-p1-pengguna-dan-hak-akses-p2-surat` |
+| 2.1.3 | Perancangan arsitektur sistem (Laravel MVC, client-server, hosting) | Naufal | inti | `docs/2.1.3-perancangan-arsitektur-sistem-laravel-mvc-client-server` |
+| 2.2.1 | ERD & skema database (data store D1-D11) | Nabila | inti | `docs/2.2.1-erd-dan-skema-database-data-store-d1-d11` |
+| 2.2.2 | Kamus data & kerunutan Data Store vs E-R | Nabila | inti | `docs/2.2.2-kamus-data-dan-kerunutan-data-store-vs-e-r` |
+| 2.2.3 | Use Case Diagram (Super Admin, Tata Usaha, Pegawai, Publik) | Naufal | inti | `docs/2.2.3-use-case-diagram-super-admin-tata-usaha-pegawai-publik` |
+| 2.2.4 | Activity Diagram alur utama (surat masuk/keluar, klasifikasi, tata naskah) | Naufal | inti | `docs/2.2.4-activity-diagram-alur-utama-surat-masuk-keluar` |
+| 2.2.5 | Sequence Diagram & Class Diagram | Arta | inti | `docs/2.2.5-sequence-diagram-dan-class-diagram` |
+| 2.3.1 | Alur navigasi & struktur menu per role | Arta | inti | `docs/2.3.1-alur-navigasi-dan-struktur-menu-per-role` |
+| 2.3.2 | Wireframe halaman publik & autentikasi | Arta | inti | `docs/2.3.2-wireframe-halaman-publik-dan-autentikasi` |
+| 2.3.3 | Wireframe dashboard, surat masuk/keluar & klasifikasi arsip | Arta | inti | `docs/2.3.3-wireframe-dashboard-surat-masuk-keluar-dan-klasifikasi` |
+| 2.3.4 | Wireframe tata naskah/template, utilitas dokumen, KP4 & manajemen pengguna | Arta | inti | `docs/2.3.4-wireframe-tata-naskah-template-utilitas-dokumen-kp4-dan` |
+| 2.3.5 | Prototipe responsif (desktop/mobile) & finalisasi UI/UX | Arta | susulan | `docs/2.3.5-prototipe-responsif-desktop-mobile-dan-finalisasi-ui-ux` |
 
-| Kode | Paket | PIC | Jam | Cabang |
-|---|---|---|---:|---|
-| 2.1 | Siapkan lingkungan aplikasi, basis data, dan data awal kode klasifikasi | Nabila | 7 | `feature/2.1-siapkan-lingkungan-aplikasi-basis-data` |
-| 2.2 | Autentikasi, peran, dan hak akses | Nabila | 8 | `feature/2.2-autentikasi-peran-dan-hak-akses` |
-| 2.3 | Tampilan masuk dan menu sesuai peran | Arta | 4 | `feature/2.3-tampilan-masuk-dan-menu-sesuai-peran` |
-| 2.4 | Kerangka tampilan: navigasi, tabel, saringan, mode gelap | Arta | 12 | `feature/2.4-kerangka-tampilan-navigasi-tabel-saringan` |
-| 2.5 | Riwayat aktivitas dan pengamanan dasar | Nabila | 5 | `feature/2.5-riwayat-aktivitas-dan-pengamanan-dasar` |
-| 2.6 | Uji fondasi: masuk, akses, riwayat | Naufal | 3 | `test/2.6-uji-fondasi-masuk-akses-riwayat` |
-| | **Subtotal fase 2** | | **39** | |
+## Fase 3 - Implementasi / Pengembangan (M3)
 
-## Fase 3 - Modul Inti Kearsipan
+| Kode | Paket | PIC | Prioritas | Cabang |
+|---|---|---|---|---|
+| 3.1.1 | Inisialisasi Laravel 13, Tailwind CSS v3, Alpine.js & layout Blade dasar | Arta | inti | `feature/3.1.1-inisialisasi-laravel-13-tailwind-css-v3-alpine-js-dan` |
+| 3.1.2 | Setup repository Git, branching & Conventional Commits | Naufal | inti | `chore/3.1.2-setup-repository-git-branching-dan-conventional-commits` |
+| 3.1.3 | Konfigurasi MySQL, migrasi 11 tabel & seeder awal | Nabila | inti | `feature/3.1.3-konfigurasi-mysql-migrasi-11-tabel-dan-seeder-awal` |
+| 3.2.1 | Autentikasi login/logout (Laravel Breeze kustom) | Nabila | inti | `feature/3.2.1-autentikasi-login-logout-laravel-breeze-kustom` |
+| 3.2.2 | Manajemen pengguna (tambah, ubah, hapus, aktif/nonaktif) | Nabila | inti | `feature/3.2.2-manajemen-pengguna-tambah-ubah-hapus-aktif-nonaktif` |
+| 3.2.3 | Role & hak akses (Super Admin, Tata Usaha, Pegawai) | Nabila | inti | `feature/3.2.3-role-dan-hak-akses-super-admin-tata-usaha-pegawai` |
+| 3.2.4 | Antarmuka login & kelola pengguna | Arta | inti | `feature/3.2.4-antarmuka-login-dan-kelola-pengguna` |
+| 3.2.5 | Profil pengguna & ubah password | Arta | inti | `feature/3.2.5-profil-pengguna-dan-ubah-password` |
+| 3.3.1 | Seeding 2.985 kode klasifikasi JRA SKKAAD hierarkis & masa simpan | Nabila | inti | `feature/3.3.1-seeding-2-985-kode-klasifikasi-jra-skkaad-hierarkis-dan` |
+| 3.3.2 | Katalog & pencarian klasifikasi arsip (UI) | Arta | inti | `feature/3.3.2-katalog-dan-pencarian-klasifikasi-arsip-ui` |
+| 3.4.1 | Surat masuk (CRUD, bidang tujuan, klasifikasi) | Nabila | inti | `feature/3.4.1-surat-masuk-crud-bidang-tujuan-klasifikasi` |
+| 3.4.2 | Surat keluar (CRUD; jenis SPT, SPPD, SK, Undangan) | Nabila | inti | `feature/3.4.2-surat-keluar-crud-jenis-spt-sppd-sk-undangan` |
+| 3.4.3 | Disposisi, pencetakan & pelacakan status surat | Nabila | inti | `feature/3.4.3-disposisi-pencetakan-dan-pelacakan-status-surat` |
+| 3.4.4 | Pencarian surat & filter tahun arsip | Nabila | inti | `feature/3.4.4-pencarian-surat-dan-filter-tahun-arsip` |
+| 3.4.5 | Import/Export data surat format Excel (.xlsx) | Nabila | susulan | `feature/3.4.5-import-export-data-surat-format-excel-xlsx` |
+| 3.4.6 | Export data surat format PDF (DomPDF) | Arta | susulan | `feature/3.4.6-export-data-surat-format-pdf-dompdf` |
+| 3.4.7 | Antarmuka surat masuk/keluar (form, tabel, pencarian, filter) | Arta | inti | `feature/3.4.7-antarmuka-surat-masuk-keluar-form-tabel-pencarian` |
+| 3.5.1 | Katalog tata naskah | Arta | susulan | `feature/3.5.1-katalog-tata-naskah` |
+| 3.5.2 | Manajemen template dokumen (upload, ubah, hapus) | Nabila | susulan | `feature/3.5.2-manajemen-template-dokumen-upload-ubah-hapus` |
+| 3.5.3 | Utilitas dokumen: foto ke PDF, Word ke PDF, gabung PDF | Nabila | ditunda | `feature/3.5.3-utilitas-dokumen-foto-ke-pdf-word-ke-pdf-gabung-pdf` |
+| 3.5.4 | KP4 Generator (dokumen tunjangan keluarga dari template) | Arta | ditunda | `feature/3.5.4-kp4-generator-dokumen-tunjangan-keluarga-dari-template` |
+| 3.6.1 | Statistik & grafik tren surat masuk/keluar dengan filter tanggal & bidang (query) | Nabila | inti | `feature/3.6.1-statistik-dan-grafik-tren-surat-masuk-keluar-dengan` |
+| 3.6.2 | Antarmuka dashboard (kartu statistik & grafik) | Arta | inti | `feature/3.6.2-antarmuka-dashboard-kartu-statistik-dan-grafik` |
+| 3.6.3 | Ekspor laporan dashboard ke PDF & Excel | Nabila | susulan | `feature/3.6.3-ekspor-laporan-dashboard-ke-pdf-dan-excel` |
+| 3.7.1 | Audit log pencatatan aktivitas pengguna | Nabila | susulan | `feature/3.7.1-audit-log-pencatatan-aktivitas-pengguna` |
+| 3.7.2 | Halaman publik (landing, kode klasifikasi, tata naskah) | Arta | susulan | `feature/3.7.2-halaman-publik-landing-kode-klasifikasi-tata-naskah` |
+| 3.7.3 | Halaman panduan penggunaan bagi pengguna baru | Arta | susulan | `feature/3.7.3-halaman-panduan-penggunaan-bagi-pengguna-baru` |
+| 3.7.4 | SEO: sitemap XML & robots.txt | Nabila | ditunda | `feature/3.7.4-seo-sitemap-xml-dan-robots-txt` |
+| 3.7.5 | Integrasi antar modul & penyelarasan responsif | Naufal | susulan | `feature/3.7.5-integrasi-antar-modul-dan-penyelarasan-responsif` |
 
-Minggu 6-7 - gerbang M3 (25 Okt); paket 3.4-3.9 masuk M4
+## Fase 4 - Pengujian (M4)
 
-| Kode | Paket | PIC | Jam | Cabang |
-|---|---|---|---:|---|
-| 3.1 | Surat masuk: catat, ubah, hapus, lampiran | Nabila | 12 | `feature/3.1-surat-masuk-catat-ubah-hapus-lampiran` |
-| 3.2 | Tampilan surat masuk dan unggah lampiran | Arta | 8 | `feature/3.2-tampilan-surat-masuk-dan-unggah-lampiran` |
-| 3.3 | Surat keluar per jenis: SPT, SPPD, SK, undangan | Nabila | 10 | `feature/3.3-surat-keluar-per-jenis-spt-sppd-sk` |
-| 3.4 | Tampilan surat keluar dan pemilih pegawai | Arta | 8 | `feature/3.4-tampilan-surat-keluar-dan-pemilih-pegawai` |
-| 3.5 | Penomoran agenda dan tahun arsip | Nabila | 7 | `feature/3.5-penomoran-agenda-dan-tahun-arsip` |
-| 3.6 | Klasifikasi arsip dan pencarian kode | Nabila | 7 | `feature/3.6-klasifikasi-arsip-dan-pencarian-kode` |
-| 3.7 | Tampilan klasifikasi dan pemilih kode | Arta | 6 | `feature/3.7-tampilan-klasifikasi-dan-pemilih-kode` |
-| 3.8 | Impor dan ekspor Excel | Nabila | 8 | `feature/3.8-impor-dan-ekspor-excel` |
-| 3.9 | Ekspor rekap PDF | Nabila | 6 | `feature/3.9-ekspor-rekap-pdf` |
-| 3.10 | Uji modul surat dan arsip | Naufal | 5 | `test/3.10-uji-modul-surat-dan-arsip` |
-| | **Subtotal fase 3** | | **77** | |
+| Kode | Paket | PIC | Prioritas | Cabang |
+|---|---|---|---|---|
+| 4.1.1 | Rencana pengujian & test case dari SKPL | Naufal | inti | `test/4.1.1-rencana-pengujian-dan-test-case-dari-skpl` |
+| 4.1.2 | Unit test (model, controller, service) | Nabila | inti | `test/4.1.2-unit-test-model-controller-service` |
+| 4.1.3 | Integration test antar modul & alur per role | Arta | inti | `test/4.1.3-integration-test-antar-modul-dan-alur-per-role` |
+| 4.1.4 | Perbaikan bug hasil pengujian fungsional sisi backend | Nabila | inti | `fix/4.1.4-perbaikan-bug-hasil-pengujian-fungsional-sisi-backend` |
+| 4.1.5 | Perbaikan bug hasil pengujian fungsional sisi frontend | Arta | inti | `fix/4.1.5-perbaikan-bug-hasil-pengujian-fungsional-sisi-frontend` |
+| 4.2.1 | Uji keamanan (bcrypt, CSRF, validasi input, session 24 jam, HTTPS) | Nabila | inti | `test/4.2.1-uji-keamanan-bcrypt-csrf-validasi-input-session-24-jam` |
+| 4.2.2 | Uji kinerja (muat halaman <=3 dtk, pencarian <=2 dtk) & kebutuhan sumber daya | Arta | susulan | `test/4.2.2-uji-kinerja-muat-halaman-3-dtk-pencarian-2-dtk-dan` |
+| 4.2.3 | Uji kompatibilitas browser, responsivitas & ergonomi | Arta | susulan | `test/4.2.3-uji-kompatibilitas-browser-responsivitas-dan-ergonomi` |
+| 4.2.4 | Uji ketersediaan & keandalan (backup harian, error rate <0,1%) | Nabila | susulan | `test/4.2.4-uji-ketersediaan-dan-keandalan-backup-harian-error-rate` |
+| 4.2.5 | Review bahasa antarmuka (Bahasa Indonesia) | Naufal | susulan | `test/4.2.5-review-bahasa-antarmuka-bahasa-indonesia` |
+| 4.3.1 | Penyusunan skenario UAT & form sign-off | Naufal | inti | `test/4.3.1-penyusunan-skenario-uat-dan-form-sign-off` |
+| 4.3.2 | Pelaksanaan UAT bersama staf Dishub | Naufal | inti | `test/4.3.2-pelaksanaan-uat-bersama-staf-dishub` |
+| 4.3.3 | Perbaikan temuan UAT sisi backend | Nabila | inti | `fix/4.3.3-perbaikan-temuan-uat-sisi-backend` |
+| 4.3.4 | Perbaikan temuan UAT sisi frontend | Arta | inti | `fix/4.3.4-perbaikan-temuan-uat-sisi-frontend` |
+| 4.3.5 | Persetujuan hasil UAT (sign-off) | Naufal | inti | `test/4.3.5-persetujuan-hasil-uat-sign-off` |
 
-## Fase 4 - Disposisi dan Tindak Lanjut
+## Fase 5 - Deployment & Serah Terima (M5)
 
-Minggu 8 - gerbang M4 (15 Nov)
+| Kode | Paket | PIC | Prioritas | Cabang |
+|---|---|---|---|---|
+| 5.1.1 | Konfigurasi hosting Hostinger, domain .my.id & SSL | Nabila | inti | `chore/5.1.1-konfigurasi-hosting-hostinger-domain-my-id-dan-ssl` |
+| 5.1.2 | Deploy aplikasi & migrasi database produksi | Nabila | inti | `chore/5.1.2-deploy-aplikasi-dan-migrasi-database-produksi` |
+| 5.1.3 | Smoke test produksi | Arta | inti | `chore/5.1.3-smoke-test-produksi` |
+| 5.2.1 | Penyusunan user manual (panduan pengguna staf dinas) | Arta | susulan | `docs/5.2.1-penyusunan-user-manual-panduan-pengguna-staf-dinas` |
+| 5.2.2 | Pelatihan pengguna Dishub (Super Admin, Tata Usaha, Pegawai) | Naufal | susulan | `docs/5.2.2-pelatihan-pengguna-dishub-super-admin-tata-usaha` |
+| 5.3.1 | Finalisasi dokumentasi teknis (arsitektur & panduan pengembangan) | Nabila | susulan | `docs/5.3.1-finalisasi-dokumentasi-teknis-arsitektur-dan-panduan` |
+| 5.3.2 | Serah terima sistem & akses ke Dishub (berita acara) | Naufal | inti | `chore/5.3.2-serah-terima-sistem-dan-akses-ke-dishub-berita-acara` |
+| 5.3.3 | Dukungan pasca implementasi (pemeliharaan awal) | Naufal | susulan | `chore/5.3.3-dukungan-pasca-implementasi-pemeliharaan-awal` |
+| 5.3.4 | Penutupan proyek & sign-off Project Charter | Naufal | inti | `chore/5.3.4-penutupan-proyek-dan-sign-off-project-charter` |
 
-| Kode | Paket | PIC | Jam | Cabang |
-|---|---|---|---:|---|
-| 4.1 | Rancangan dan skema disposisi | Nabila | 7 | `feature/4.1-rancangan-dan-skema-disposisi` |
-| 4.2 | Alur disposisi dan tindak lanjut | Nabila | 7 | `feature/4.2-alur-disposisi-dan-tindak-lanjut` |
-| 4.3 | Tampilan lembar disposisi dan riwayat | Arta | 10 | `feature/4.3-tampilan-lembar-disposisi-dan-riwayat` |
-| 4.4 | Pemberitahuan dalam aplikasi | Nabila | 5 | `feature/4.4-pemberitahuan-dalam-aplikasi` |
-| 4.5 | Penanda pemberitahuan pada antarmuka | Arta | 4 | `feature/4.5-penanda-pemberitahuan-pada-antarmuka` |
-| 4.6 | Uji alur disposisi | Naufal | 4 | `test/4.6-uji-alur-disposisi` |
-| | **Subtotal fase 4** | | **37** | |
-
-## Fase 5 - Laporan, Naskah, dan Utilitas
-
-Minggu 9 - gerbang M4 (15 Nov)
-
-| Kode | Paket | PIC | Jam | Cabang |
-|---|---|---|---:|---|
-| 5.1 | Dasbor statistik dan grafik | Nabila | 6 | `feature/5.1-dasbor-statistik-dan-grafik` |
-| 5.2 | Tampilan dasbor dan grafik | Arta | 8 | `feature/5.2-tampilan-dasbor-dan-grafik` |
-| 5.3 | Tata naskah dan pengelolaan template | Nabila | 8 | `feature/5.3-tata-naskah-dan-pengelolaan-template` |
-| 5.4 | Tampilan tata naskah dan template | Arta | 6 | `feature/5.4-tampilan-tata-naskah-dan-template` |
-| 5.5 | Pembuatan dokumen KP4 | Nabila | 6 | `feature/5.5-pembuatan-dokumen-kp4` |
-| 5.6 | Utilitas dokumen: foto, Word, gabung PDF | Nabila | 8 | `feature/5.6-utilitas-dokumen-foto-word-gabung-pdf` |
-| 5.7 | Tampilan utilitas dokumen | Arta | 6 | `feature/5.7-tampilan-utilitas-dokumen` |
-| 5.8 | Halaman publik, panduan, dan SEO | Arta | 8 | `feature/5.8-halaman-publik-panduan-dan-seo` |
-| 5.9 | Uji laporan dan utilitas | Naufal | 4 | `test/5.9-uji-laporan-dan-utilitas` |
-| | **Subtotal fase 5** | | **60** | |
-
-## Fase 6 - Non-Fungsional dan Pengamanan
-
-Minggu 10 - gerbang M4 (15 Nov)
-
-| Kode | Paket | PIC | Jam | Cabang |
-|---|---|---|---:|---|
-| 6.1 | Pencadangan harian dan uji pemulihan | Nabila | 4 | `feature/6.1-pencadangan-harian-dan-uji-pemulihan` |
-| 6.2 | Pengamanan: sesi, batas masuk, unggahan | Nabila | 5 | `feature/6.2-pengamanan-sesi-batas-masuk-unggahan` |
-| 6.3 | Uji kecepatan dan perbaikan kueri | Nabila | 4 | `feature/6.3-uji-kecepatan-dan-perbaikan-kueri` |
-| 6.4 | Uji tampilan ponsel dan lintas peramban | Arta | 6 | `feature/6.4-uji-tampilan-ponsel-dan-lintas-peramban` |
-| 6.5 | Peninjauan bahasa dan kemudahan pemakaian | Naufal | 3 | `feature/6.5-peninjauan-bahasa-dan-kemudahan-pemakaian` |
-| | **Subtotal fase 6** | | **22** | |
-
-## Fase 7 - Pengujian dan Uji Penerimaan
-
-Minggu 11 - gerbang M5 (27 Nov)
-
-| Kode | Paket | PIC | Jam | Cabang |
-|---|---|---|---:|---|
-| 7.1 | Matriks uji R-01 sampai R-20 | Naufal | 4 | `test/7.1-matriks-uji-r-01-sampai-r-20` |
-| 7.2 | Uji otomatis fitur utama | Nabila | 5 | `feature/7.2-uji-otomatis-fitur-utama` |
-| 7.3 | Perbaikan temuan pengujian internal (backend) | Nabila | 6 | `fix/7.3-perbaikan-temuan-pengujian-internal` |
-| 7.4 | Perbaikan temuan pengujian internal (tampilan) | Arta | 6 | `fix/7.4-perbaikan-temuan-pengujian-internal` |
-| 7.5 | Skenario dan formulir uji penerimaan | Naufal | 4 | `test/7.5-skenario-dan-formulir-uji-penerimaan` |
-| 7.6 | Sesi uji penerimaan bersama staf dinas | Naufal | 4 | `test/7.6-sesi-uji-penerimaan-bersama-staf-dinas` |
-| 7.7 | Perbaikan temuan uji penerimaan (backend) | Nabila | 6 | `fix/7.7-perbaikan-temuan-uji-penerimaan-backend` |
-| 7.8 | Perbaikan temuan uji penerimaan (tampilan) | Arta | 4 | `fix/7.8-perbaikan-temuan-uji-penerimaan-tampilan` |
-| | **Subtotal fase 7** | | **39** | |
-
-## Fase 8 - Penerapan Website dan Serah Terima
-
-Minggu 12 - gerbang M5 (27 Nov)
-
-| Kode | Paket | PIC | Jam | Cabang |
-|---|---|---|---:|---|
-| 8.1 | Publikasi website, pengaturan domain, dan HTTPS | Nabila | 3 | `chore/8.1-publikasi-website-pengaturan-domain-dan` |
-| 8.2 | Pendampingan penerapan dan pemeriksaan akhir | Naufal | 2 | `chore/8.2-pendampingan-penerapan-dan-pemeriksaan` |
-| 8.3 | Buku panduan pengguna | Naufal | 4 | `docs/8.3-buku-panduan-pengguna` |
-| 8.4 | Tampilan panduan di dalam aplikasi | Arta | 2 | `feature/8.4-tampilan-panduan-di-dalam-aplikasi` |
-| 8.5 | Pelatihan dua sesi | Naufal | 4 | `docs/8.5-pelatihan-dua-sesi` |
-| 8.6 | Serah terima akun dan dokumen | Naufal | 1 | `chore/8.6-serah-terima-akun-dan-dokumen` |
-| | **Subtotal fase 8** | | **16** | |
-
-## Prioritas pengerjaan
-
-Ditetapkan 21 Oktober 2026. Paket inti tidak boleh ditunda; urutan lengkapnya ada pada
-[rencana-git-flow.md](rencana-git-flow.md) bagian 9.
-
-| Prioritas | Paket | Catatan |
-|---|---|---|
-| Inti | 1.1–1.6, 2.1–2.4, 3.1–3.7, 3.9, 4.1–4.3, 5.1–5.2, 6.1–6.2, 7.1, 7.3–7.8, 8.1–8.3, 8.5–8.6 | Wajib ada sebelum uji penerimaan |
-| Susulan | 2.5–2.6, 3.8, 3.10, 4.4–4.6, 5.3–5.4, 5.9, 6.3–6.5, 7.2, 8.4 | Dikerjakan setelah paket inti pada fase yang sama |
-| Ditunda | 5.5–5.7, bagian SEO pada 5.8 | Dikerjakan setelah M5 bila waktu tersisa |
-
-Paket yang ditunda tetap tercatat di papan dan tidak dihapus, agar lingkupnya tidak hilang.
-
-## Rekap
-
-| Anggota | Peran | Paket | Jam |
-|---|---|---:|---:|
-| Naufal | PM & QA | 17 | 62 |
-| Nabila | Backend | 23 | 150 |
-| Arta | Frontend | 16 | 104 |
-| **Total** | | **56** | **316** |
