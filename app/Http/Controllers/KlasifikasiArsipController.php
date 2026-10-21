@@ -39,6 +39,7 @@ class KlasifikasiArsipController extends Controller
     {
         $query = KlasifikasiArsip::with('parent');
 
+        // Search
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
@@ -47,7 +48,36 @@ class KlasifikasiArsipController extends Controller
             });
         }
 
-        $klasifikasis = $query->orderBy('kode')->paginate(10);
+        // Filter: Tingkat
+        if ($request->filled('tingkat')) {
+            $tingkat = $request->tingkat;
+            $query->whereRaw("(LENGTH(kode) - LENGTH(REPLACE(kode, '.', '')) + 1) = ?", [$tingkat]);
+        }
+
+        // Filter: Masa Simpan (Total)
+        if ($request->filled('masa_simpan')) {
+            switch ($request->masa_simpan) {
+                case 'pendek':
+                    $query->whereRaw("(retensi_aktif_tahun + retensi_inaktif_tahun) < 5");
+                    break;
+                case 'sedang':
+                    $query->whereRaw("(retensi_aktif_tahun + retensi_inaktif_tahun) BETWEEN 5 AND 10");
+                    break;
+                case 'panjang':
+                    $query->whereRaw("(retensi_aktif_tahun + retensi_inaktif_tahun) BETWEEN 10 AND 25");
+                    break;
+                case 'sangat_panjang':
+                    $query->whereRaw("(retensi_aktif_tahun + retensi_inaktif_tahun) > 25");
+                    break;
+            }
+        }
+
+        // Filter: Nasib Akhir
+        if ($request->filled('nasib_akhir')) {
+            $query->where('nasib_akhir', $request->nasib_akhir);
+        }
+
+        $klasifikasis = $query->orderBy('kode')->paginate(20);
         return view('klasifikasi-arsip.index', compact('klasifikasis'));
     }
 
