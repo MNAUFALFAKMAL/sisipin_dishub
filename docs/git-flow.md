@@ -281,6 +281,7 @@ Judul issue: `[<kode>] <paket kerja>`, contoh `[3.1] Surat masuk: catat, ubah, h
 
 Milestone M1-M5 mengikuti tanggal gerbang. Kolom papan: Backlog, Todo, In Progress, Review,
 Done. Satu kartu hanya berada di *In Progress* bila cabangnya sudah ada.
+Papan: [Projects SISIPIN DISHUB](https://github.com/users/MNAUFALFAKMAL/projects/1).
 
 ---
 
