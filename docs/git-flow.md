@@ -344,7 +344,7 @@ git push
 | Rebase merge | Dimatikan |
 | Templat PR dan issue | Tersedia di `.github/` |
 | Label dan milestone | Tersedia |
-| Kolaborator | Nabila (`@nblable`) menunggu menerima undangan; Arta menyusul |
+| Kolaborator | Nabila (`@nblable`) dan Arta (`@artaeka`) aktif dengan akses Write |
 
 Bila aturan cabang perlu diubah, PM melakukannya melalui **Settings -> Rules** atau `gh api`,
 bukan dengan mematikan aturan sementara.

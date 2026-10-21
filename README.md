@@ -29,7 +29,7 @@ akun pengelola teknis dan halaman publik tanpa akun.
 |---|---|---|
 | Muhammad Naufal Fikri Akmal | `@MNAUFALFAKMAL` | Project Manager & QA — dokumen, pengujian, rilis |
 | Nabila Ramadhani Mujahidin | `@nblable` | Backend — basis data, logika, keamanan |
-| Arta Eka Yuly Rajagukguk | _(menunggu username)_ | Frontend — tampilan, alur, responsif |
+| Arta Eka Yuly Rajagukguk | `@artaeka` | Frontend — tampilan, alur, responsif |
 
 ## Alur kerja
 
