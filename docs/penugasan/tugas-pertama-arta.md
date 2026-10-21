@@ -61,8 +61,8 @@ Yang tidak boleh:
 Cara mengirim hasil:
 
 ```
-git add .
-git commit -m "docs(1.5): rancangan tampilan dan panduan visual"
+git add -p
+git commit -m "docs(1.5): rancangan tampilan dan panduan visual" -m "Refs: WBS 1.5"
 git push -u origin HEAD
 ```
 

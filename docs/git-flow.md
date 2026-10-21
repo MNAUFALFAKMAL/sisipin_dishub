@@ -79,27 +79,51 @@ Daftar lengkap 56 nama cabang ada di [peta-paket-cabang.md](peta-paket-cabang.md
 
 ---
 
-## 4. Format commit
+## 4. Commit yang baik
+
+Commit adalah satuan pekerjaan terkecil yang bisa dijelaskan, diuji, dan dibatalkan sendiri.
+Satu commit memuat **satu alasan perubahan**. Commit yang rapi membuat tinjauan cepat,
+riwayat mudah dibaca, dan kesalahan mudah dicari.
+
+### Aturan
+
+1. **Atomik** — satu commit untuk satu perubahan logis. Jangan mencampur fitur, perbaikan
+   tampilan, dan penyesuaian konfigurasi dalam satu commit.
+2. **Kalimat perintah** — tulis seolah melanjutkan kalimat "Bila diterapkan, commit ini akan
+   …". Gunakan `tambah`, `perbaiki`, `ubah`, `hapus`, bukan `menambahkan` atau `sudah ditambah`.
+3. **Ringkasan maksimal 72 karakter**, tanpa titik di akhir.
+4. **Badan pesan** dipakai bila perubahan perlu penjelasan: tulis **apa** dan **mengapa**,
+   bukan **bagaimana** (caranya sudah terlihat pada diff). Bungkus pada 72 karakter.
+5. **Tautkan pekerjaan** — sertakan `Refs: WBS <kode>, <R-xx>` pada baris terakhir.
+6. **Jangan commit setengah jadi** ke cabang bersama. `wip` hanya boleh di cabang sendiri dan
+   akan hilang saat *squash merge*.
+7. **Satu commit harus lolos uji** sebelum di-push. Bila uji belum ada, pastikan aplikasi
+   setidaknya dapat dijalankan.
+
+### Format baku
 
 ```
 <tipe>(<kode-wbs>): <ringkasan kalimat perintah, maksimal 72 karakter>
 
-<penjelasan bila perlu: apa dan mengapa, bukan bagaimana>
+<penjelasan bila perlu: apa dan mengapa>
 Refs: WBS <kode>, <R-xx/NF-xx>
 ```
 
-Contoh:
+Contoh lengkap:
 
 ```
 feat(3.1): catat surat masuk beserta unggahan lampiran
 
 - nomor agenda unik per tahun
 - batas 5 lampiran, 5 MB per berkas
+- tolak berkas selain PDF, JPG, PNG, DOC, DOCX
 Refs: WBS 3.1, R-04
 ```
 
 ```
 fix(4.2): perbaiki status disposisi tidak berubah setelah tindak lanjut
+
+Status hanya diperbarui bila kolom tindak_lanjut_oleh terisi.
 Refs: WBS 4.2, R-04
 ```
 
@@ -108,12 +132,270 @@ docs(1.4): susun SKPL versi pengguna
 Refs: WBS 1.4
 ```
 
-Tipe yang sah: `feat`, `fix`, `docs`, `test`, `chore`, `refactor`, `style`, `perf`.
-Commit `wip` boleh pada cabang pribadi dan akan hilang saat *squash merge*.
+### Tipe commit
+
+| Tipe | Dipakai untuk | Contoh |
+|---|---|---|
+| `feat` | Kemampuan baru yang terlihat pengguna | `feat(3.1): catat surat masuk` |
+| `fix` | Perbaikan kesalahan | `fix(4.2): perbaiki status disposisi` |
+| `docs` | Dokumen, panduan, komentar penting | `docs(8.3): tambah panduan disposisi` |
+| `test` | Uji otomatis atau matriks uji | `test(7.1): tambah uji surat masuk` |
+| `refactor` | Rombak kode tanpa mengubah perilaku | `refactor(3.4): pisahkan service pencarian` |
+| `style` | Format, spasi, urutan impor | `style(3.2): rapikan indentasi Blade` |
+| `perf` | Peningkatan kecepatan | `perf(6.2): tambah indeks kolom tanggal` |
+| `chore` | Konfigurasi, dependensi, perkakas | `chore(2.1): pasang Laravel Pint` |
+| `revert` | Membatalkan commit sebelumnya | `revert: feat(3.1): catat surat masuk` |
+
+Kode WBS wajib ada pada `feat`, `fix`, `docs`, `test`, dan `chore` yang menyentuh paket.
+Untuk perubahan di luar paket (misalnya memperbaiki alur kerja), kode boleh diganti nama
+singkat, contoh `chore(workflow): tambah templat PR`.
+
+### Contoh benar dan salah
+
+| Salah | Mengapa salah | Perbaikan |
+|---|---|---|
+| `update` | Tidak menjelaskan apa pun | `fix(3.1): perbaiki validasi tanggal surat` |
+| `fix bug` | Tidak ada kode WBS dan terlalu umum | `fix(3.1): tolak tanggal terima sebelum tanggal surat` |
+| `feat: tambah surat masuk, surat keluar, laporan` | Tiga pekerjaan dalam satu commit | Pecah menjadi tiga commit |
+| `wip` di `develop` | Riwayat bersama jadi kotor | Simpan di cabang sendiri, rapikan sebelum PR |
+| `feat(3.1): Menambahkan surat masuk.` | Bukan kalimat perintah, ada titik | `feat(3.1): tambah surat masuk` |
+
+### Sebelum commit
+
+```bash
+git status                     # berkas apa yang berubah
+git diff                       # isi perubahan yang belum di-stage
+git add -p                     # pilih potongan perubahan satu per satu
+git diff --staged              # periksa yang akan masuk commit
+```
+
+Bila uji sudah ada:
+
+```bash
+php artisan test
+./vendor/bin/pint --dirty
+npm run build
+```
+
+### Yang tidak boleh masuk commit
+
+- `.env`, kunci aplikasi, kata sandi, token, atau berkas kredensial apa pun.
+- `vendor/`, `node_modules/`, `storage/logs/`, `*.sql` hasil ekspor, dan berkas > 5 MB.
+- Berkas hasil *build* yang seharusnya dihasilkan ulang.
+- Kode orang lain yang belum ditinjau (jangan gabungkan pekerjaan orang ke cabang sendiri).
+
+### Kapan memecah commit
+
+- Perubahan menyentuh lebih dari satu paket WBS.
+- Ada perbaikan format bercampur perubahan perilaku.
+- Satu commit memuat lebih dari ±200 baris yang tidak saling terkait.
+- Commit perlu dua penjelasan berbeda pada badan pesan.
 
 ---
 
-## 5. Alur harian
+## 5. Push dan sinkronisasi
+
+Push adalah menerbitkan commit ke repositori agar terlihat tim dan masuk tinjauan. Push
+**bukan** cara menggabungkan pekerjaan — penggabungan hanya lewat Pull Request.
+
+### Sekali saja di awal
+
+```bash
+git config --global user.name "Nama Lengkap"
+git config --global user.email "surel@contoh.id"
+gh auth login                       # pilih GitHub.com, HTTPS
+gh auth setup-git                   # pemasangan kredensial untuk repo ini
+```
+
+Periksa sekali:
+
+```bash
+git config --get user.name
+git config --get user.email
+gh auth status
+```
+
+Gunakan surel yang sama dengan akun GitHub. Bila berbeda, commit tidak terhubung ke akun dan
+tidak terhitung pada kontribusi.
+
+### Push cabang baru (pertama kali)
+
+```bash
+git push -u origin HEAD
+```
+
+`-u` menghubungkan cabang lokal dengan cabang remote (`origin/<nama-cabang>`), sehingga push
+dan pull berikutnya cukup `git push` / `git pull`.
+
+Setelah push pertama, langsung buka PR:
+
+```bash
+gh pr create --base develop --fill
+```
+
+### Push berikutnya
+
+```bash
+git add <berkas>
+git commit -m "fix(3.1): perbaiki validasi tanggal surat" -m "Refs: WBS 3.1, R-04"
+git push
+```
+
+Push setiap kali satu commit logis selesai, bukan menumpuk seminggu. Cabang yang ter-push
+adalah cadangan pekerjaan sekaligus bahan tinjauan.
+
+### Sinkron dengan `develop` terbaru
+
+Lakukan setiap pagi dan sebelum membuka PR:
+
+```bash
+git fetch origin
+git rebase origin/develop
+```
+
+Bila ada konflik:
+
+```bash
+git status                     # lihat berkas yang bentrok
+# sunting berkas, buang penanda <<<<<<< ======= >>>>>>>
+git add <berkas>
+git rebase --continue
+```
+
+Bila kacau dan ingin mengulang:
+
+```bash
+git rebase --abort             # kembali ke keadaan sebelum rebase
+```
+
+Rebase dipilih agar riwayat cabang lurus: tidak ada commit "Merge branch develop" yang
+membingungkan peninjau. Karena PR digabung dengan *squash*, riwayat `develop` tetap satu
+commit per paket.
+
+### Bila push ditolak
+
+Pesan `! [rejected] ... (non-fast-forward)` berarti remote memiliki commit yang tidak ada di
+lokal — biasanya karena Anda melakukan rebase/amend, atau ada orang lain yang push ke cabang
+yang sama.
+
+```bash
+git fetch origin
+git rebase origin/<nama-cabang>
+git push
+```
+
+Jangan langsung memakai `--force`. Periksa dulu dengan `git log --oneline origin/<nama-cabang>`
+apa yang tertinggal.
+
+### Aturan force push
+
+| Keadaan | Boleh? | Perintah |
+|---|---|---|
+| Cabang sendiri, setelah rebase/amend, belum ditinjau | Boleh | `git push --force-with-lease` |
+| Cabang sendiri yang sedang ditinjau orang lain | Sebaiknya tidak | Tambah commit baru, jangan tulis ulang |
+| `develop` atau `main` | **Tidak pernah** | Ditolak proteksi cabang |
+| Cabang milik orang lain | **Tidak pernah** | Minta pemiliknya memperbaiki |
+
+`--force-with-lease` lebih aman daripada `--force`: push dibatalkan bila remote ternyata sudah
+berubah sejak pengambilan terakhir, sehingga pekerjaan orang lain tidak tertimpa.
+
+### Menghapus cabang
+
+Setelah PR digabung:
+
+```bash
+git push origin --delete <nama-cabang>   # hapus di remote
+git branch -d <nama-cabang>              # hapus di lokal
+```
+
+Repositori sudah diatur menghapus cabang otomatis setelah PR digabung, jadi perintah di atas
+hanya untuk membersihkan sisa.
+
+### Push tag rilis
+
+Hanya PM yang melakukannya, setelah gerbang rilis lolos:
+
+```bash
+git tag -a v1.0.0-M3 -m "Rilis M3: surat masuk dan disposisi"
+git push origin v1.0.0-M3
+gh release create v1.0.0-M3 --generate-notes
+```
+
+Tag tidak boleh dipindahkan atau dihapus setelah diumumkan. Bila ada perbaikan, buat tag baru
+(`v1.0.1-M3`), jangan menimpa.
+
+---
+
+## 6. Merapikan commit sebelum PR
+
+Riwayat cabang tidak harus sempurna saat bekerja, tetapi harus rapi saat diserahkan.
+
+### Periksa dulu
+
+```bash
+git log --oneline --graph origin/develop..HEAD
+git diff --stat origin/develop...HEAD
+```
+
+Bila ada commit `wip`, `fix lagi`, atau `typo`, rapikan sebelum membuka PR.
+
+### Membetulkan commit terakhir
+
+```bash
+git add <berkas-yang-terlewat>
+git commit --amend --no-edit        # tambahkan berkas ke commit terakhir
+git commit --amend                  # ubah pesan commit terakhir
+```
+
+Lakukan hanya pada commit yang belum di-push, atau pada cabang sendiri yang belum ditinjau.
+Setelah amend pada cabang yang sudah di-push:
+
+```bash
+git push --force-with-lease
+```
+
+### Menggabungkan beberapa commit
+
+```bash
+git rebase -i origin/develop
+```
+
+Di editor, ganti `pick` pada commit kedua dan seterusnya:
+
+| Perintah | Arti |
+|---|---|
+| `pick` | Pertahankan commit |
+| `reword` | Pertahankan perubahan, ubah pesan |
+| `squash` | Gabungkan ke commit di atasnya, pesan digabung |
+| `fixup` | Gabungkan ke commit di atasnya, pesan dibuang |
+| `drop` | Buang commit |
+
+Contoh: tiga commit `wip` menjadi satu commit utuh.
+
+```
+pick   a1b2c3d feat(3.1): catat surat masuk
+fixup  e4f5a6b wip
+fixup  789abcd fix typo
+```
+
+Setelah selesai, periksa ulang dengan `git log --oneline`, jalankan uji, lalu
+`git push --force-with-lease`.
+
+### Membatalkan commit
+
+| Keadaan | Perintah | Akibat |
+|---|---|---|
+| Belum di-push, ingin ubah isi | `git reset --soft HEAD~1` | Commit batal, perubahan tetap di-stage |
+| Belum di-push, ingin buang total | `git reset --hard HEAD~1` | Perubahan hilang — pastikan dulu |
+| Sudah di-push/digabung | `git revert <hash>` | Membuat commit pembatal, riwayat aman |
+| Sudah di `develop`/`main` | `git revert` lewat PR | Jangan `reset` pada cabang bersama |
+
+`reset --hard` tidak dapat diurungkan. Sebelum memakainya, pastikan tidak ada perubahan yang
+belum di-commit atau simpan sementara dengan `git stash`.
+
+---
+
+## 7. Alur harian
 
 ### Semua orang, setiap pagi
 
@@ -121,8 +403,9 @@ Commit `wip` boleh pada cabang pribadi dan akan hilang saat *squash merge*.
 git checkout develop
 git pull --ff-only
 git checkout <cabang-saya>
-git merge develop            # selesaikan konflik di lokal
-php artisan test             # bila kode sudah ada
+git fetch origin
+git rebase origin/develop     # selesaikan konflik di lokal
+php artisan test              # bila kode sudah ada
 ```
 
 ### Backend (Nabila)
@@ -131,9 +414,14 @@ php artisan test             # bila kode sudah ada
 2. `git checkout -b feature/3.1-surat-masuk-catat-ubah-hapus-lampiran`
 3. Kerjakan berurutan: migrasi, model, validasi, controller/service, uji fitur.
 4. Tulis nama rute dan nama field pada issue (kontrak untuk Frontend).
-5. `php artisan test` dan `./vendor/bin/pint --dirty`.
-6. Push, buka PR ke `develop`, tautkan issue (`Closes #12`).
-7. Setelah digabung: hapus cabang, ambil paket berikutnya.
+5. Commit per satuan logis:
+   ```bash
+   git add database/migrations app/Models app/Http/Requests
+   git commit -m "feat(3.1): tambah tabel dan model surat masuk" -m "Refs: WBS 3.1, R-04"
+   ```
+6. Sebelum push: `php artisan test` dan `./vendor/bin/pint --dirty`.
+7. `git push -u origin HEAD` (pertama kali), lalu `gh pr create --base develop --fill`.
+8. Setelah digabung: hapus cabang, ambil paket berikutnya.
 
 ### Frontend (Arta)
 
@@ -141,21 +429,32 @@ php artisan test             # bila kode sudah ada
 2. `git checkout -b feature/3.2-tampilan-surat-masuk-dan-unggah-lampiran`
 3. Kerjakan Blade, komponen, dan Tailwind. Jangan mengubah `routes/web.php` atau controller.
 4. Periksa tampilan pada 360 px dan 1366 px, empat peramban.
-5. `npm run build`, lampirkan tangkapan layar pada PR.
-6. Push, buka PR ke `develop`, minta tinjauan PM.
+5. Commit dan push:
+   ```bash
+   git add resources/views resources/css
+   git commit -m "feat(3.2): tampilkan daftar surat masuk" -m "Refs: WBS 3.2, R-04"
+   npm run build
+   git push -u origin HEAD
+   ```
+6. Buka PR, lampirkan tangkapan layar, minta tinjauan PM.
 
 ### PM & QA (Naufal)
 
 1. Menjaga papan Issues, milestone, dan status paket pada WBS.
 2. Meninjau PR maksimal 1 x 24 jam: lingkup, keterbacaan, uji, tidak ada rahasia.
-3. Menggabung PR dengan *squash*, menghapus cabang, memastikan issue tertutup.
+3. Menggabung PR dengan *squash*, menghapus cabang, memastikan issue tertutup:
+   ```bash
+   gh pr checkout <nomor>
+   php artisan test
+   gh pr merge <nomor> --squash --admin --delete-branch
+   ```
 4. Menjalankan uji manual R-xx pada akhir fase, mencatat hasil pada matriks uji.
 5. Menyiapkan `release/M<n>`, menjalankan daftar periksa gerbang, memberi tag.
 6. Memperbarui dokumen bila ada perubahan lingkup.
 
 ---
 
-## 6. Kontrak kerja antar peran
+## 8. Kontrak kerja antar peran
 
 | Hal | Ditentukan oleh | Dipakai oleh | Ditulis di |
 |---|---|---|---|
@@ -170,7 +469,7 @@ issue dan menandai pemilik cabang Frontend.
 
 ---
 
-## 7. Kepemilikan berkas
+## 9. Kepemilikan berkas
 
 | Berkas/folder | Pemilik | Aturan |
 |---|---|---|
@@ -194,7 +493,7 @@ Titik rawan konflik:
 
 ---
 
-## 8. Pull Request
+## 10. Pull Request
 
 | Ukuran PR | Tindakan |
 |---|---|
@@ -208,6 +507,10 @@ Kewajiban penulis:
 - Mengisi templat PR: ringkasan, cara menguji, daftar periksa.
 - Menautkan issue dengan `Closes #<nomor>`.
 - Menyertakan tangkapan layar untuk perubahan tampilan (360 px dan 1366 px).
+- Bila `develop` sudah berubah, sinkronkan dengan `git rebase origin/develop` lalu
+  `git push --force-with-lease`. Jangan memakai tombol *Update branch* — tombol itu membuat
+  commit gabungan yang mengotori riwayat cabang. Bila PR sudah disetujui, minta tinjauan ulang
+  setelah rebase.
 
 Kewajiban peninjau:
 
@@ -218,14 +521,14 @@ Kewajiban peninjau:
 
 Cara menggabung:
 
-- **Squash and merge** untuk semua PR fitur.
-- **Rebase and merge** hanya bila commit sudah rapi dan perlu dipertahankan.
-- **Merge commit** hanya untuk `release/*` ke `main`.
+- **Squash and merge** untuk semua PR, termasuk `release/*` ke `main`. Riwayat `develop` dan
+  `main` menjadi satu commit per paket.
+- Rebase merge dan merge commit dimatikan pada repositori agar tidak ada dua gaya riwayat.
 - Hapus cabang setelah digabung.
 
 ---
 
-## 9. Gerbang rilis dan tag
+## 11. Gerbang rilis dan tag
 
 | Gerbang | Tanggal | Paket yang harus selesai | Tag |
 |---|---|---|---|
@@ -267,7 +570,7 @@ Catatan:
 
 ---
 
-## 10. Issue, label, dan milestone
+## 12. Issue, label, dan milestone
 
 Judul issue: `[<kode>] <paket kerja>`, contoh `[3.1] Surat masuk: catat, ubah, hapus, lampiran`.
 
@@ -285,7 +588,7 @@ Papan: [Projects SISIPIN DISHUB](https://github.com/users/MNAUFALFAKMAL/projects
 
 ---
 
-## 11. Definisi selesai per jenis
+## 13. Definisi selesai per jenis
 
 | Jenis | Definisi selesai |
 |---|---|
@@ -299,7 +602,7 @@ Definisi selesai pada WBS tetap menjadi acuan utama.
 
 ---
 
-## 12. Perbaikan darurat setelah rilis
+## 14. Perbaikan darurat setelah rilis
 
 ```bash
 git checkout main
@@ -321,20 +624,22 @@ git push
 
 ---
 
-## 13. Larangan
+## 15. Larangan
 
-1. `git push --force` ke `main` atau `develop`.
+1. `git push --force` ke cabang mana pun; bila perlu, hanya `--force-with-lease` pada cabang
+   sendiri.
 2. Menulis langsung ke `main` atau `develop`.
-3. Menggabung PR sendiri tanpa peninjau.
-4. Commit `.env`, kunci, kata sandi, atau data pribadi.
-5. Mengubah migrasi yang sudah pernah digabung.
-6. Menyimpan `vendor/`, `node_modules/`, atau `storage/` pada repositori.
-7. Menghapus atau menimpa pekerjaan orang lain tanpa berdiskusi.
-8. Menunda penggabungan sampai akhir fase.
+3. Menulis ulang (rebase/amend) cabang yang sedang ditinjau orang lain.
+4. Menggabung PR sendiri tanpa peninjau.
+5. Commit `.env`, kunci, kata sandi, atau data pribadi.
+6. Mengubah migrasi yang sudah pernah digabung.
+7. Menyimpan `vendor/`, `node_modules/`, atau `storage/` pada repositori.
+8. Menghapus atau menimpa pekerjaan orang lain tanpa berdiskusi.
+9. Menunda penggabungan sampai akhir fase.
 
 ---
 
-## 14. Pengaturan repositori
+## 16. Pengaturan repositori
 
 | Hal | Status |
 |---|---|
@@ -352,15 +657,28 @@ bukan dengan mematikan aturan sementara.
 
 ---
 
-## 15. Contekan
+## 17. Contekan
+
+### Alur satu commit
+
+```bash
+git status
+git diff
+git add -p
+git diff --staged
+php artisan test
+git commit -m "feat(3.1): catat surat masuk" -m "Refs: WBS 3.1, R-04"
+git push
+```
 
 ### Naufal - PM & QA
 
 ```bash
+git fetch origin
 gh pr list --base develop
 gh pr checkout <nomor>
 php artisan test
-gh pr merge <nomor> --squash --delete-branch
+gh pr merge <nomor> --squash --admin --delete-branch
 
 git checkout develop && git pull --ff-only
 git checkout -b release/M3
@@ -373,9 +691,14 @@ gh pr create --base main --fill
 ```bash
 git checkout develop && git pull --ff-only
 git checkout -b feature/3.1-surat-masuk-catat-ubah-hapus-lampiran
+
 php artisan make:model SuratMasuk -m
+git add database/migrations app/Models
+git commit -m "feat(3.1): tambah tabel dan model surat masuk" -m "Refs: WBS 3.1, R-04"
+
 php artisan test
 ./vendor/bin/pint --dirty
+git fetch origin && git rebase origin/develop
 git push -u origin HEAD
 gh pr create --base develop --fill
 ```
@@ -385,15 +708,30 @@ gh pr create --base develop --fill
 ```bash
 git checkout develop && git pull --ff-only
 git checkout -b feature/3.2-tampilan-surat-masuk-dan-unggah-lampiran
+
 npm run dev
+git add resources/views resources/css
+git commit -m "feat(3.2): tampilkan daftar surat masuk" -m "Refs: WBS 3.2, R-04"
+
 npm run build
+git fetch origin && git rebase origin/develop
 git push -u origin HEAD
 gh pr create --base develop --fill
 ```
 
+### Saat push ditolak
+
+```bash
+git fetch origin
+git rebase origin/<nama-cabang>
+git push
+# hanya bila commit sendiri sudah ditulis ulang:
+git push --force-with-lease
+```
+
 ---
 
-## 16. Risiko dan penanganan
+## 18. Risiko dan penanganan
 
 | Risiko | Tanda | Penanganan |
 |---|---|---|
@@ -406,7 +744,7 @@ gh pr create --base develop --fill
 
 ---
 
-## 17. Rujukan
+## 19. Rujukan
 
 - Rencana dan keputusan tim: [rencana-git-flow.md](rencana-git-flow.md)
 - Peta 56 paket ke cabang: [peta-paket-cabang.md](peta-paket-cabang.md)
