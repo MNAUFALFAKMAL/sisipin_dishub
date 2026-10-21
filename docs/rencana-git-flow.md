@@ -151,7 +151,7 @@ Contoh nyata:
 |---|---|---|---|---|
 | 0. Kesepakatan | 21–22 Okt | Isi K1–K6, K8–K10; terima undangan; baca dokumen | Naufal | Dokumen berstatus **Berlaku** |
 | 1. Pemanasan | 22 Okt | Satu PR percobaan dari Nabila dan Arta | Nabila, Arta | Dua PR tergabung |
-| 2. Kerangka website | 22–23 Okt | `chore/2.0-inisialisasi-laravel`: Laravel 13, Tailwind, halaman kosong | Nabila | `develop` dapat dijalankan lokal |
+| 2. Kerangka website | 22–23 Okt | Paket 2.1: Laravel 13, Tailwind, basis data, halaman kosong | Nabila | `develop` dapat dijalankan lokal |
 | 3. Fondasi (M2) | 23–25 Okt | Paket 2.1–2.6: basis data, akun, hak akses, tampilan dasar | Nabila, Arta | Gerbang M2 (terlambat 11 Okt, ditutup 25 Okt) |
 | 4. Modul inti (M3) | 25–31 Okt | Paket 3.1–3.10: surat masuk/keluar, klasifikasi, impor-ekspor | Nabila, Arta | Gerbang M3 (jadwal 25 Okt, batas 31 Okt) |
 | 5. Disposisi & laporan | 1–10 Nov | Paket 4.1–5.9: disposisi, laporan, naskah, utilitas | Nabila, Arta | Modul tersedia di `develop` |
@@ -194,7 +194,8 @@ Aturan komunikasi:
 10. Bila pekerjaan lebih dari 3 hari, pecah paketnya.
 
 Rincian aturan ada di [`git-flow.md`](git-flow.md), daftar 56 nama cabang ada di
-[`peta-paket-cabang.md`](peta-paket-cabang.md).
+[`peta-paket-cabang.md`](peta-paket-cabang.md). Istilah layar mengikuti
+[`glosarium.md`](glosarium.md) dan hasil pengujian dicatat pada [`matriks-uji.md`](matriks-uji.md).
 
 ---
 
