@@ -1,0 +1,19 @@
+/* ── Base Styles ─────────────────────────────────────────────── */
+html:not(.dark) body {
+  background-color: #F7FAFC;
+  color: #2D3748;
+}
+
+html:not(.dark) .page-content {
+  background-color: #F7FAFC;
+}
+
+html:not(.dark) .card,
+html:not(.dark) .stat-card {
+  background-color: #ffffff;
+}
+
+html:not(.dark) .topbar {
+  background-color: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
+}

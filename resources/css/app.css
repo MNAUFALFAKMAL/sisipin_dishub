@@ -1,0 +1,12 @@
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+@plugin "@tailwindcss/forms";
+
+@import "./tokens.css";
+@import "./base.css";
+@import "./components.css";
+@import "./dark.css";
+
+[x-cloak] {
+  display: none !important;
+}

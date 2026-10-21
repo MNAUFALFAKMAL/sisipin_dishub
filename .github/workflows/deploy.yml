@@ -1,0 +1,151 @@
+name: Deploy Laravel to Hostinger
+
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+
+    - name: Build Assets (Vite)
+      run: |
+        npm ci --prefer-offline
+        npm run build
+
+    - name: Create .env file
+      run: |
+        printf '%s' '${{ secrets.ENV_FILE }}' > .env
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.5'
+        extensions: mbstring, pdo_mysql, zip, gd
+        tools: composer:latest
+
+    - name: Install Composer Dependencies
+      run: |
+        composer install --no-dev --optimize-autoloader --ignore-platform-reqs
+
+    - name: Package App into Single Archive
+      run: |
+        START=$(date +%s)
+        tar -czf deploy.tar.gz \
+          artisan app bootstrap config database public resources routes vendor \
+          composer.json composer.lock package.json package-lock.json \
+          vite.config.js
+        END=$(date +%s)
+        echo "Package OK: $(du -h deploy.tar.gz | cut -f1) in $((END-START))s"
+
+    - name: Upload Archive via SCP (dengan retry)
+      env:
+        SCP_HOST: ${{ secrets.HOSTINGER_HOST }}
+        SCP_USER: ${{ secrets.HOSTINGER_USERNAME }}
+        SCP_PASS: ${{ secrets.HOSTINGER_PASSWORD }}
+        SCP_PORT: ${{ secrets.HOSTINGER_PORT }}
+      run: |
+        sudo apt-get update -q
+        sudo apt-get install -y -q sshpass
+        TARGET="/home/$SCP_USER/domains/${{ secrets.HOSTINGER_DOMAIN }}/public_html/deploy.tar.gz"
+        for attempt in 1 2 3 4 5; do
+          echo "---- SCP percobaan $attempt/5 ----"
+          if sshpass -p "$SCP_PASS" scp \
+            -P "$SCP_PORT" \
+            -o StrictHostKeyChecking=no \
+            -o UserKnownHostsFile=/dev/null \
+            -o ConnectTimeout=60 \
+            deploy.tar.gz "$SCP_USER@$SCP_HOST:$TARGET"; then
+            echo "  OK: deploy.tar.gz ter-upload pada percobaan $attempt"
+            exit 0
+          fi
+          echo "  !! Percobaan $attempt gagal (timeout/blokir), tunggu 30s lalu ulang..."
+          sleep 30
+        done
+        echo "  !! GAGAL: 5 percobaan SCP semua gagal. Hostinger mungkin memblokir IP runner sementara."
+        echo "  Coba jalankan ulang workflow (runner dapat IP baru) atau cek cPanel -> Security -> SSH."
+        exit 1
+
+    - name: Run Laravel Post-Deploy via SSH
+      uses: appleboy/ssh-action@v1.2.0
+      with:
+        host: ${{ secrets.HOSTINGER_HOST }}
+        username: ${{ secrets.HOSTINGER_USERNAME }}
+        password: ${{ secrets.HOSTINGER_PASSWORD }}
+        port: ${{ secrets.HOSTINGER_PORT }}
+        timeout: 60s
+        command_timeout: 10m
+        script: |
+          set -e
+          DEPLOY_DIR="/home/${{ secrets.HOSTINGER_USERNAME }}/domains/${{ secrets.HOSTINGER_DOMAIN }}/public_html"
+          APP_URL="https://${{ secrets.HOSTINGER_DOMAIN }}"
+          START=$(date +%s)
+          cd "$DEPLOY_DIR"
+
+          echo "===== [1/5] Lingkungan ====="
+          PHP="/opt/alt/php85/usr/bin/php"
+          echo "  PHP: $($PHP -r 'echo PHP_VERSION;')"
+          echo "  Dir: $DEPLOY_DIR"
+          echo "  OK"
+
+          echo "===== [2/5] Ekstrak arsip ====="
+          if [ ! -f deploy.tar.gz ]; then
+            echo "  !! GAGAL: deploy.tar.gz tidak ditemukan di $DEPLOY_DIR"
+            exit 1
+          fi
+          tar -xzf deploy.tar.gz
+          rm -f deploy.tar.gz
+          # Bersihkan favicon.ico kosong dari deploy lama (diganti favicon-512.png)
+          rm -f public/favicon.ico
+          # Rewrite semua request ke folder public/ (document root Hostinger = public_html)
+          if [ ! -f .htaccess ] || ! grep -q "public/" .htaccess; then
+            printf '<IfModule mod_rewrite.c>\n    RewriteEngine On\n    RewriteRule ^(.*)$ public/$1 [L]\n</IfModule>\n' > .htaccess
+          fi
+          echo "  OK: app di-extract"
+
+          echo "===== [3/5] Skeleton storage ====="
+          mkdir -p storage/app/public/templates
+          mkdir -p storage/app/public/surat-masuk
+          mkdir -p storage/app/public/surat-keluar
+          mkdir -p storage/framework/cache/data
+          mkdir -p storage/framework/sessions
+          mkdir -p storage/framework/views
+          mkdir -p storage/logs
+          chmod -R 775 storage
+          echo "  OK: skeleton storage siap"
+
+          echo "===== [4/5] Optimasi Laravel + Migrasi + Seed ====="
+          $PHP artisan optimize:clear
+          $PHP artisan config:cache
+          $PHP artisan route:cache
+          $PHP artisan view:clear
+          $PHP artisan migrate --force
+          # Seed data pegawai (idempotent: updateOrCreate by nama, aman dijalankan tiap deploy)
+          $PHP artisan db:seed --class=PegawaiSeeder --force
+          echo "  OK: optimize + migrate + seed selesai"
+
+          echo "===== [5/5] Smoke test (HTTP) ====="
+          HTTP_CODE=$(curl -sk -o /dev/null -w "%{http_code}" --max-time 60 "$APP_URL/" || echo "000")
+          echo "  GET $APP_URL/ -> HTTP $HTTP_CODE"
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "  !! GAGAL: website tidak mengembalikan HTTP 200 (dapat $HTTP_CODE)"
+            echo "  Cek: storage/logs/laravel.log di server."
+            exit 1
+          fi
+          echo "  OK: website responsif (HTTP 200)"
+
+          END=$(date +%s)
+          DURATION=$((END-START))
+          echo "===== DEPLOY SELESAI: $(date '+%Y-%m-%d %H:%M:%S') (${DURATION}s) ====="
+          echo "[$(date '+%Y-%m-%d %H:%M:%S')] DEPLOY OK (${DURATION}s, HTTP $HTTP_CODE)" >> storage/logs/deploy.log

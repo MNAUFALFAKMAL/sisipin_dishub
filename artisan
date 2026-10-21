@@ -1,0 +1,15 @@
+#!/usr/bin/env php
+<?php
+
+error_reporting(E_ALL & ~E_DEPRECATED);
+define('LARAVEL_START', microtime(true));
+
+// Register the Composer autoloader...
+require __DIR__.'/vendor/autoload.php';
+
+// Bootstrap, and create the application...
+$app = require_once __DIR__.'/bootstrap/app.php';
+
+$status = $app->handleCommand(new Symfony\Component\Console\Input\ArgvInput);
+
+exit($status);
