@@ -6,10 +6,9 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\View;
-
-use App\Models\SuratMasuk;
-use App\Models\SuratKeluar;
-use App\Models\TahunArsip;
+use Illuminate\Support\Facades\Gate;
+use App\Models\User;
+use App\Policies\UserPolicy;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -27,6 +26,9 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Paginator::defaultView('vendor.pagination.tailwind');
+
+        // Register policies
+        Gate::policy(User::class, UserPolicy::class);
 
         // Daftar tahun untuk dropdown navigasi sidebar (Surat Menyurat → Tahun)
         View::composer('layouts.sidebar', function ($view) {
