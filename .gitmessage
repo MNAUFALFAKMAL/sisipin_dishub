@@ -1,0 +1,26 @@
+# <tipe>(<kode-wbs>): <ringkasan imperative, max 72 char>
+#
+# Contoh:
+# feat(3.4.1): catat surat masuk beserta lampiran
+# fix(4.1.4): perbaiki status disposisi tidak berubah
+# docs(2.3.2): tambah wireframe halaman publik
+#
+# Tipe yang diperbolehkan:
+# feat     - Fitur baru yang terlihat pengguna
+# fix      - Perbaikan bug
+# docs     - Dokumentasi, panduan, komentar penting
+# test     - Test case, matriks uji, skenario UAT
+# refactor - Rombak kode tanpa mengubah perilaku
+# style    - Format, spasi, urutan import (tidak logika)
+# perf     - Peningkatan performa
+# chore    - Config, tooling, dependency, CI
+# revert   - Membatalkan commit sebelumnya
+# ci       - Perubahan GitHub Actions / CI/CD
+#
+# Scope (wajib): kode WBS 3 tingkat (contoh: 3.4.1)
+# Subject: imperative mood, lowercase, no trailing period, max 72 char
+
+# <penjelasan detail: apa dan mengapa, bullet points jika perlu>
+#
+# Refs: WBS <kode>, R-<xx>/NF-<xx>
+# Closes #<nomor-issue> (opsional)
