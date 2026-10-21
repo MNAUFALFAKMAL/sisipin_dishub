@@ -9,8 +9,9 @@ kerja, bukan riwayat kode yang sudah ada.
 
 - **Repositori:** `MNAUFALFAKMAL/sisipin_dishub`
 - **Cabang tetap:** `main` (rilis) dan `develop` (integrasi)
-- **Paket kerja:** 56 paket, 8 fase, 5 gerbang (M1-M5), 316 jam
-- **Peta paket ke cabang:** [peta-paket-cabang.md](peta-paket-cabang.md)
+- **Lingkup kerja:** WBS charter, 75 tugas, 18 grup, 5 fase, 5 gerbang (M1-M5), 344 jam
+- **Acuan lingkup:** [wbs.md](wbs.md)
+- **Peta tugas ke cabang:** [peta-paket-cabang.md](peta-paket-cabang.md)
 - **Peninjau:** PM & QA untuk semua perubahan
 
 ---
@@ -19,10 +20,11 @@ kerja, bukan riwayat kode yang sudah ada.
 
 1. `main` hanya menerima rilis; setiap push ke `main` memicu penerapan otomatis.
 2. `develop` adalah tempat integrasi; menerima perubahan hanya lewat Pull Request.
-3. Satu paket WBS = satu cabang = satu PR.
+3. Satu tugas WBS = satu cabang = satu PR.
 4. PR kecil dan cepat ditinjau; umur cabang maksimal 3 hari kerja.
 5. Kontrak rute dan nama field ditetapkan Backend sebelum Frontend mulai.
 6. Riwayat bersih: penggabungan memakai *squash*, judul mengikuti Conventional Commits.
+7. Satu grup WBS = satu issue; daftar tugasnya menjadi checklist pada issue tersebut.
 
 ---
 
@@ -35,7 +37,7 @@ main        rilis M1..M5 + tag
  |              ^
 develop  ---+---+---+---+---+---+---  integrasi harian
              \     /   \     /
-           feature  feature  feature   satu cabang per paket WBS
+           feature  feature  feature   satu cabang per tugas WBS
 ```
 
 | Cabang | Dibuat dari | Digabung ke | Umur | Keterangan |
@@ -54,7 +56,7 @@ Aturan tambahan:
 
 - Cabang yang sudah digabung dihapus (otomatis bila pengaturan repositori aktif).
 - Satu orang memegang satu cabang aktif pada satu waktu.
-- Bila pekerjaan melewati 3 hari, pecah paketnya atau mulai ulang dari `develop` terbaru.
+- Bila pekerjaan melewati 3 hari, pecah tugasnya atau mulai ulang dari `develop` terbaru.
 
 ---
 
@@ -64,18 +66,18 @@ Pola: `<tipe>/<kode-wbs>-<ringkasan-3-sampai-6-kata>`
 
 | Tipe | Contoh |
 |---|---|
-| `feature` | `feature/3.1-surat-masuk-catat-ubah-hapus-lampiran` |
-| `fix` | `fix/7.3-temuan-uji-backend` |
-| `docs` | `docs/1.3-susun-project-charter-versi-mitra` |
-| `test` | `test/7.1-matriks-uji-r-01-r-20` |
-| `chore` | `chore/8.1-publikasi-website-domain-dan-https` |
+| `feature` | `feature/3.4.1-surat-masuk-crud-bidang-tujuan-klasifikasi` |
+| `fix` | `fix/4.1.4-perbaikan-bug-hasil-pengujian-fungsional-sisi-backend` |
+| `docs` | `docs/2.3.2-wireframe-halaman-publik-dan-autentikasi` |
+| `test` | `test/4.1.1-rencana-pengujian-dan-test-case-dari-skpl` |
+| `chore` | `chore/5.1.2-deploy-aplikasi-dan-migrasi-database-produksi` |
 | `release` | `release/M3` |
 | `hotfix` | `hotfix/perbaikan-login` |
 
 Gunakan huruf kecil dan tanda hubung. Jangan memakai spasi, huruf besar, garis bawah, atau
 karakter `#`, `~`, `^`, `:`, `?`, `*`, `[`, `\`.
 
-Daftar lengkap 56 nama cabang ada di [peta-paket-cabang.md](peta-paket-cabang.md).
+Daftar lengkap 75 nama cabang ada di [peta-paket-cabang.md](peta-paket-cabang.md).
 
 ---
 
@@ -112,53 +114,53 @@ Refs: WBS <kode>, <R-xx/NF-xx>
 Contoh lengkap:
 
 ```
-feat(3.1): catat surat masuk beserta unggahan lampiran
+feat(3.4.1): catat surat masuk beserta unggahan lampiran
 
 - nomor agenda unik per tahun
 - batas 5 lampiran, 5 MB per berkas
 - tolak berkas selain PDF, JPG, PNG, DOC, DOCX
-Refs: WBS 3.1, R-04
+Refs: WBS 3.4.1, R-04
 ```
 
 ```
-fix(4.2): perbaiki status disposisi tidak berubah setelah tindak lanjut
+fix(4.1.4): perbaiki status disposisi tidak berubah setelah tindak lanjut
 
 Status hanya diperbarui bila kolom tindak_lanjut_oleh terisi.
-Refs: WBS 4.2, R-04
+Refs: WBS 4.1.4, R-04
 ```
 
 ```
-docs(1.4): susun SKPL versi pengguna
-Refs: WBS 1.4
+docs(1.2.3): susun dokumen SKPL versi mitra
+Refs: WBS 1.2.3
 ```
 
 ### Tipe commit
 
 | Tipe | Dipakai untuk | Contoh |
 |---|---|---|
-| `feat` | Kemampuan baru yang terlihat pengguna | `feat(3.1): catat surat masuk` |
-| `fix` | Perbaikan kesalahan | `fix(4.2): perbaiki status disposisi` |
-| `docs` | Dokumen, panduan, komentar penting | `docs(8.3): tambah panduan disposisi` |
-| `test` | Uji otomatis atau matriks uji | `test(7.1): tambah uji surat masuk` |
-| `refactor` | Rombak kode tanpa mengubah perilaku | `refactor(3.4): pisahkan service pencarian` |
-| `style` | Format, spasi, urutan impor | `style(3.2): rapikan indentasi Blade` |
-| `perf` | Peningkatan kecepatan | `perf(6.2): tambah indeks kolom tanggal` |
-| `chore` | Konfigurasi, dependensi, perkakas | `chore(2.1): pasang Laravel Pint` |
-| `revert` | Membatalkan commit sebelumnya | `revert: feat(3.1): catat surat masuk` |
+| `feat` | Kemampuan baru yang terlihat pengguna | `feat(3.4.1): catat surat masuk` |
+| `fix` | Perbaikan kesalahan | `fix(4.1.4): perbaiki status disposisi` |
+| `docs` | Dokumen, panduan, komentar penting | `docs(5.2.1): tambah panduan disposisi` |
+| `test` | Uji otomatis atau matriks uji | `test(4.1.2): tambah uji surat masuk` |
+| `refactor` | Rombak kode tanpa mengubah perilaku | `refactor(3.6.1): pisahkan service statistik` |
+| `style` | Format, spasi, urutan impor | `style(3.2.4): rapikan indentasi Blade` |
+| `perf` | Peningkatan kecepatan | `perf(3.4.4): tambah indeks kolom tanggal` |
+| `chore` | Konfigurasi, dependensi, perkakas | `chore(3.1.2): pasang Laravel Pint` |
+| `revert` | Membatalkan commit sebelumnya | `revert: feat(3.4.1): catat surat masuk` |
 
-Kode WBS wajib ada pada `feat`, `fix`, `docs`, `test`, dan `chore` yang menyentuh paket.
-Untuk perubahan di luar paket (misalnya memperbaiki alur kerja), kode boleh diganti nama
+Kode WBS wajib ada pada `feat`, `fix`, `docs`, `test`, dan `chore` yang menyentuh tugas.
+Untuk perubahan di luar tugas (misalnya memperbaiki alur kerja), kode boleh diganti nama
 singkat, contoh `chore(workflow): tambah templat PR`.
 
 ### Contoh benar dan salah
 
 | Salah | Mengapa salah | Perbaikan |
 |---|---|---|
-| `update` | Tidak menjelaskan apa pun | `fix(3.1): perbaiki validasi tanggal surat` |
-| `fix bug` | Tidak ada kode WBS dan terlalu umum | `fix(3.1): tolak tanggal terima sebelum tanggal surat` |
+| `update` | Tidak menjelaskan apa pun | `fix(3.4.1): perbaiki validasi tanggal surat` |
+| `fix bug` | Tidak ada kode WBS dan terlalu umum | `fix(3.4.1): tolak tanggal terima sebelum tanggal surat` |
 | `feat: tambah surat masuk, surat keluar, laporan` | Tiga pekerjaan dalam satu commit | Pecah menjadi tiga commit |
 | `wip` di `develop` | Riwayat bersama jadi kotor | Simpan di cabang sendiri, rapikan sebelum PR |
-| `feat(3.1): Menambahkan surat masuk.` | Bukan kalimat perintah, ada titik | `feat(3.1): tambah surat masuk` |
+| `feat(3.4.1): Menambahkan surat masuk.` | Bukan kalimat perintah, ada titik | `feat(3.4.1): tambah surat masuk` |
 
 ### Sebelum commit
 
@@ -186,7 +188,7 @@ npm run build
 
 ### Kapan memecah commit
 
-- Perubahan menyentuh lebih dari satu paket WBS.
+- Perubahan menyentuh lebih dari satu tugas WBS.
 - Ada perbaikan format bercampur perubahan perilaku.
 - Satu commit memuat lebih dari ±200 baris yang tidak saling terkait.
 - Commit perlu dua penjelasan berbeda pada badan pesan.
@@ -433,29 +435,29 @@ php artisan test              # bila kode sudah ada
 
 ### Backend (Nabila)
 
-1. Ambil satu paket dari kolom *Todo* pada papan Issues, pindahkan ke *In Progress*.
-2. `git checkout -b feature/3.1-surat-masuk-catat-ubah-hapus-lampiran`
+1. Ambil satu tugas dari checklist issue grup *Todo*, pindahkan issue ke *In Progress* bila belum.
+2. `git checkout -b feature/3.4.1-surat-masuk-crud-bidang-tujuan-klasifikasi`
 3. Kerjakan berurutan: migrasi, model, validasi, controller/service, uji fitur.
 4. Tulis nama rute dan nama field pada issue (kontrak untuk Frontend).
 5. Commit per satuan logis:
    ```bash
    git add database/migrations app/Models app/Http/Requests
-   git commit -m "feat(3.1): tambah tabel dan model surat masuk" -m "Refs: WBS 3.1, R-04"
+   git commit -m "feat(3.4.1): tambah tabel dan model surat masuk" -m "Refs: WBS 3.4.1, R-04"
    ```
 6. Sebelum push: `php artisan test` dan `./vendor/bin/pint --dirty`.
 7. `git push -u origin HEAD` (pertama kali), lalu `gh pr create --base develop --fill`.
-8. Setelah digabung: hapus cabang, ambil paket berikutnya.
+8. Setelah digabung: hapus cabang, ceklis tugas di issue, ambil tugas berikutnya.
 
 ### Frontend (Arta)
 
 1. Pastikan kontrak rute dan nama field dari Backend sudah ada pada issue.
-2. `git checkout -b feature/3.2-tampilan-surat-masuk-dan-unggah-lampiran`
+2. `git checkout -b feature/3.4.7-antarmuka-surat-masuk-keluar-form-tabel-pencarian-filter`
 3. Kerjakan Blade, komponen, dan Tailwind. Jangan mengubah `routes/web.php` atau controller.
 4. Periksa tampilan pada 360 px dan 1366 px, empat peramban.
 5. Commit dan push:
    ```bash
    git add resources/views resources/css
-   git commit -m "feat(3.2): tampilkan daftar surat masuk" -m "Refs: WBS 3.2, R-04"
+   git commit -m "feat(3.4.7): tampilkan form dan tabel surat masuk/keluar" -m "Refs: WBS 3.4.7, R-04"
    npm run build
    git push -u origin HEAD
    ```
@@ -526,7 +528,7 @@ Titik rawan konflik:
 
 Kewajiban penulis:
 
-- Judul mengikuti format commit, misalnya `feat(3.1): catat surat masuk`.
+- Judul mengikuti format commit, misalnya `feat(3.4.1): catat surat masuk`.
 - Mengisi templat PR: ringkasan, cara menguji, daftar periksa.
 - Menautkan issue dengan `Closes #<nomor>`.
 - Menyertakan tangkapan layar untuk perubahan tampilan (360 px dan 1366 px).
@@ -537,7 +539,7 @@ Kewajiban penulis:
 
 Kewajiban peninjau:
 
-- Memeriksa lingkup: sesuai paket WBS, tidak menyelipkan perubahan lain.
+- Memeriksa lingkup: sesuai tugas WBS, tidak menyelipkan perubahan lain.
 - Memeriksa keamanan: tidak ada rahasia, validasi di server, hak akses.
 - Menjalankan `php artisan test` pada salinan lokal bila ragu.
 - Memberi keputusan maksimal 1 x 24 jam: *Approve*, *Request changes*, atau komentar.
@@ -553,13 +555,13 @@ Cara menggabung:
 
 ## 11. Gerbang rilis dan tag
 
-| Gerbang | Tanggal | Paket yang harus selesai | Tag |
+| Gerbang | Tanggal | Tugas yang harus selesai | Tag |
 |---|---|---|---|
-| M1 | 27 Sep 2026 | 1.1 - 1.6 | `v0.1.0-M1` |
-| M2 | 11 Okt 2026 | 2.1 - 2.6 | `v0.2.0-M2` |
-| M3 | 25 Okt 2026 | 3.1 - 3.10 | `v0.3.0-M3` |
-| M4 | 15 Nov 2026 | 4.1 - 6.5 | `v0.4.0-M4` |
-| M5 | 27 Nov 2026 | 7.1 - 8.6 | `v1.0.0-M5` |
+| M1 | 27 Sep 2026 | Fase 1 (`1.1.x`–`1.2.5`) | `v0.1.0-M1` |
+| M2 | 11 Okt 2026 | Fase 2 (`2.1.x`–`2.3.4`) | `v0.2.0-M2` |
+| M3 | 25 Okt 2026 | Fase 3 inti: `3.1.x`, `3.2.x`, `3.3.x`, `3.4.1`–`3.4.4`, `3.4.7`, `3.6.1`–`3.6.2` | `v0.3.0-M3` |
+| M4 | 15 Nov 2026 | Fase 3 susulan + Fase 4 (`4.1.x`, `4.2.1`, `4.3.x`) | `v0.4.0-M4` |
+| M5 | 27 Nov 2026 | Fase 5 (`5.1.x`–`5.3.4`) | `v1.0.0-M5` |
 
 Perintah rilis (dijalankan PM):
 
@@ -577,7 +579,7 @@ gh pr create --base main --title "chore(rilis): M3" --body "Gerbang M3 - 25 Okto
 # setelah PR disetujui dan digabung
 git checkout main
 git pull --ff-only
-git tag -a v0.3.0-M3 -m "Gerbang M3 - modul inti kearsipan"
+git tag -a v0.3.0-M3 -m "Gerbang M3 - implementasi inti kearsipan"
 git push origin v0.3.0-M3
 
 git checkout develop
@@ -595,18 +597,19 @@ Catatan:
 
 ## 12. Issue, label, dan milestone
 
-Judul issue: `[<kode>] <paket kerja>`, contoh `[3.1] Surat masuk: catat, ubah, hapus, lampiran`.
+Judul issue: `[<kode-grup>] <nama grup>`, contoh `[3.4] Modul Surat Masuk & Surat Keluar`.
+Isi issue berupa checklist 75 tugas; satu tugas = satu cabang = satu PR.
 
 | Kelompok | Label |
 |---|---|
-| Fase | `fase:1` sampai `fase:8` |
-| Peran | `peran:pm`, `peran:be`, `peran:fe` |
+| Fase | `fase:1` sampai `fase:5` |
+| Peran | `peran:pm`, `peran:be`, `peran:fe` (semua peran yang ada pada tugas grup) |
 | Jenis | `jenis:feat`, `jenis:fix`, `jenis:docs`, `jenis:test`, `jenis:chore` |
-| Prioritas | `prioritas:tinggi`, `prioritas:normal` |
+| Prioritas | `prioritas:tinggi` (grup berisi tugas inti), `prioritas:normal` (susulan/ditunda) |
 | Status | `status:blocked`, `status:review` |
 
 Milestone M1-M5 mengikuti tanggal gerbang. Kolom papan: Backlog, Todo, In Progress, Review,
-Done. Satu kartu hanya berada di *In Progress* bila cabangnya sudah ada.
+Done. Satu kartu = satu grup WBS (18 kartu total).
 Papan: [Projects SISIPIN DISHUB](https://github.com/users/MNAUFALFAKMAL/projects/1).
 
 ---
@@ -693,7 +696,7 @@ git diff
 git add -p
 git diff --staged
 php artisan test
-git commit -m "feat(3.1): catat surat masuk" -m "Refs: WBS 3.1, R-04"
+git commit -m "feat(3.4.1): catat surat masuk" -m "Refs: WBS 3.4.1, R-04"
 git push
 ```
 
@@ -717,11 +720,11 @@ gh pr create --base main --fill
 
 ```bash
 git checkout develop && git pull --ff-only
-git checkout -b feature/3.1-surat-masuk-catat-ubah-hapus-lampiran
+git checkout -b feature/3.4.1-surat-masuk-crud-bidang-tujuan-klasifikasi
 
 php artisan make:model SuratMasuk -m
 git add database/migrations app/Models
-git commit -m "feat(3.1): tambah tabel dan model surat masuk" -m "Refs: WBS 3.1, R-04"
+git commit -m "feat(3.4.1): tambah tabel dan model surat masuk" -m "Refs: WBS 3.4.1, R-04"
 
 php artisan test
 ./vendor/bin/pint --dirty
@@ -734,11 +737,11 @@ gh pr create --base develop --fill
 
 ```bash
 git checkout develop && git pull --ff-only
-git checkout -b feature/3.2-tampilan-surat-masuk-dan-unggah-lampiran
+git checkout -b feature/3.4.7-antarmuka-surat-masuk-keluar-form-tabel-pencarian-filter
 
 npm run dev
 git add resources/views resources/css
-git commit -m "feat(3.2): tampilkan daftar surat masuk" -m "Refs: WBS 3.2, R-04"
+git commit -m "feat(3.4.7): tampilkan form dan tabel surat masuk/keluar" -m "Refs: WBS 3.4.7, R-04"
 
 npm run build
 git fetch origin && git rebase origin/develop
