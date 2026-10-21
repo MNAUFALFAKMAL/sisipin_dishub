@@ -1,6 +1,8 @@
 # Panduan Kontribusi
 
-Panduan lengkap ada di [`docs/git-flow.md`](docs/git-flow.md). Halaman ini hanya ringkasannya.
+Panduan lengkap ada di [`docs/git-flow.md`](docs/git-flow.md). Rencana yang sedang dibahas
+tim ada di [`docs/rencana-git-flow.md`](docs/rencana-git-flow.md); peta 56 paket kerja ada di
+[`docs/peta-paket-cabang.md`](docs/peta-paket-cabang.md). Halaman ini hanya ringkasannya.
 
 ## Tiga aturan yang tidak boleh dilanggar
 
