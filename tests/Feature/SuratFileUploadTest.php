@@ -18,7 +18,7 @@ class SuratFileUploadTest extends TestCase
     {
         parent::setUp();
         // Create a user with tata_usaha role who can access surat-masuk/keluar
-        $this->user = User::factory()->create(['role' => 'tata_usaha']);
+        $this->user = User::factory()->tataUsaha()->create();
     }
 
     /**

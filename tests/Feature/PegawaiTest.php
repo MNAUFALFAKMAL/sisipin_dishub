@@ -18,14 +18,14 @@ class PegawaiTest extends TestCase
 
     public function test_staff_cannot_access_pegawai_index()
     {
-        $staff = User::factory()->create(['role' => 'staff']);
+        $staff = User::factory()->staff()->create();
 
         $this->actingAs($staff)->get('/pegawai')->assertForbidden();
     }
 
     public function test_super_admin_can_store_pegawai()
     {
-        $admin = User::factory()->create(['role' => 'super_admin']);
+        $admin = User::factory()->superAdmin()->create();
 
         $response = $this->actingAs($admin)->from('/pegawai')
             ->post('/pegawai', [
@@ -45,7 +45,7 @@ class PegawaiTest extends TestCase
 
     public function test_duplicate_pegawai_name_is_rejected()
     {
-        $admin = User::factory()->create(['role' => 'super_admin']);
+        $admin = User::factory()->superAdmin()->create();
         Pegawai::create(['nama' => 'Budi Santoso, S.E.']);
 
         $response = $this->actingAs($admin)
@@ -57,7 +57,7 @@ class PegawaiTest extends TestCase
 
     public function test_missing_nama_is_rejected()
     {
-        $admin = User::factory()->create(['role' => 'super_admin']);
+        $admin = User::factory()->superAdmin()->create();
 
         $this->actingAs($admin)->post('/pegawai', ['nama' => ''])
             ->assertSessionHasErrors('nama');
@@ -67,7 +67,7 @@ class PegawaiTest extends TestCase
 
     public function test_super_admin_can_update_pegawai()
     {
-        $admin = User::factory()->create(['role' => 'super_admin']);
+        $admin = User::factory()->superAdmin()->create();
         $pegawai = Pegawai::create(['nama' => 'Budi Santoso, S.E.', 'status' => 'aktif']);
 
         $response = $this->actingAs($admin)
@@ -87,7 +87,7 @@ class PegawaiTest extends TestCase
 
     public function test_update_keeps_same_nama_allowed()
     {
-        $admin = User::factory()->create(['role' => 'super_admin']);
+        $admin = User::factory()->superAdmin()->create();
         $pegawai = Pegawai::create(['nama' => 'Budi Santoso, S.E.', 'status' => 'aktif']);
 
         $response = $this->actingAs($admin)
@@ -102,7 +102,7 @@ class PegawaiTest extends TestCase
 
     public function test_destroy_sets_status_inactive_not_delete()
     {
-        $admin = User::factory()->create(['role' => 'super_admin']);
+        $admin = User::factory()->superAdmin()->create();
         $pegawai = Pegawai::create(['nama' => 'Budi Santoso, S.E.', 'status' => 'aktif']);
 
         $response = $this->actingAs($admin)
@@ -115,7 +115,7 @@ class PegawaiTest extends TestCase
 
     public function test_activate_restores_status_active()
     {
-        $admin = User::factory()->create(['role' => 'super_admin']);
+        $admin = User::factory()->superAdmin()->create();
         $pegawai = Pegawai::create(['nama' => 'Budi Santoso, S.E.', 'status' => 'tidak_aktif']);
 
         $response = $this->actingAs($admin)
@@ -127,7 +127,7 @@ class PegawaiTest extends TestCase
 
     public function test_index_only_lists_active_in_picker_source()
     {
-        $admin = User::factory()->create(['role' => 'super_admin']);
+        $admin = User::factory()->superAdmin()->create();
         Pegawai::create(['nama' => 'Pegawai Aktif', 'status' => 'aktif']);
         Pegawai::create(['nama' => 'Pegawai Nonaktif', 'status' => 'tidak_aktif']);
 
