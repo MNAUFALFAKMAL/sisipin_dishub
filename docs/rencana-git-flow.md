@@ -1,7 +1,8 @@
 # Rencana Alur Kerja Git — 3 Peran
 
-**Status:** Draf 0.1 — belum disepakati
+**Status:** Draf 0.2 — 1 dari 10 keputusan ditetapkan (K7)
 **Disusun:** 21 Oktober 2026
+**Diperbarui:** 21 Oktober 2026
 **Pemilik:** Naufal (PM & QA)
 **Peninjau:** Nabila (Backend), Arta (Frontend)
 **Rujukan teknis:** [`git-flow.md`](git-flow.md) · **Peta paket:** [`peta-paket-cabang.md`](peta-paket-cabang.md)
@@ -59,14 +60,18 @@ Diisi pada rapat pertama. Usulan sudah disiapkan agar rapat tidak melebar.
 | K4 | Nama cabang | Memakai kode WBS (`feature/3.1-...`) | Nama bebas | Naufal | 23 Okt |
 | K5 | Penerapan ke hosting | Hanya dari `main`, saat gerbang | Unggah manual kapan saja | Naufal | 23 Okt |
 | K6 | Lokasi tugas | GitHub Issues (56 issue yang ada) | Trello/Notion + issue ringkas | Nabila | 24 Okt |
-| K7 | Jadwal | Tetap mengikuti WBS (7 Sep – 27 Nov) | Geser 12 minggu dari 21 Okt | Naufal | 24 Okt |
+| K7 | Jadwal | **Tetap** mengikuti WBS: 7 Sep – 27 Nov 2026 (ditetapkan 21 Okt) | ~~Geser 12 minggu dari 21 Okt~~ (tidak dipilih) | Naufal | Selesai |
 | K8 | Batas waktu tinjauan | 1 × 24 jam hari kerja | 2 × 24 jam | Arta | 24 Okt |
 | K9 | Alat komunikasi harian | Grup WhatsApp + komentar issue | Hanya issue | Arta | 24 Okt |
 | K10 | Siapa boleh menghapus cabang | Otomatis setelah PR digabung | Manual oleh masing-masing | Naufal | 24 Okt |
 
-> **Catatan K7:** tanggal WBS (M1 27 Sep, M2 11 Okt, M3 25 Okt) sudah lewat dari
-> 21 Oktober. Bila memilih "geser", dokumen mitra perlu diperbarui agar tidak berbeda
-> dengan kenyataan. Bila memilih "tetap", rencana ini menjadi percepatan 5 minggu.
+> **K7 ditetapkan: tetap.** Tanggal dokumen mitra tidak diubah (M1 27 Sep, M2 11 Okt,
+> M3 25 Okt, M4 15 Nov, M5 27 Nov 2026). Konsekuensinya:
+>
+> - M1 sudah terlewati, tetapi dokumennya sudah ada sehingga gerbang M1 dapat ditutup.
+> - M2 (fondasi) dan M3 (modul inti) dimampatkan ke 22–31 Oktober.
+> - Tanggal akhir M5 tidak bergeser; sisa waktu 5 minggu dipakai untuk fase 4–8.
+> - Bila M3 meleset, yang digeser adalah tanggal M3 saja (maksimal 31 Okt), bukan M5.
 
 ---
 
@@ -144,15 +149,17 @@ Contoh nyata:
 
 | Tahap | Waktu | Kegiatan | Penanggung jawab | Penanda selesai |
 |---|---|---|---|---|
-| 0. Kesepakatan | 21–24 Okt | Rapat singkat, isi K1–K10, terima undangan | Naufal | Dokumen ini berstatus **Berlaku** |
-| 1. Pemanasan | 24–26 Okt | Satu PR percobaan dari Nabila & Arta (boleh perbaikan kecil) | Nabila, Arta | Dua PR tergabung |
-| 2. Kerangka website | 26–28 Okt | Cabang `chore/2.0-inisialisasi-laravel`: Laravel 13, Tailwind, halaman kosong | Nabila | `develop` dapat dijalankan lokal |
-| 3. Fondasi | 28 Okt–2 Nov | Paket 2.1–2.6 (basis data, akun, hak akses, tampilan dasar) | Nabila, Arta | Gerbang internal |
-| 4. Modul inti | 3–9 Nov | Paket 3.1–3.10 (surat masuk/keluar, klasifikasi, ekspor) | Nabila, Arta | Gerbang internal |
-| 5. Fitur & uji | 10–20 Nov | Paket 4.x–7.x (disposisi, laporan, UAT) | Ketiganya | Berita acara UAT |
-| 6. Rilis | 21–27 Nov | Paket 8.x, penerapan, pelatihan, serah terima | Ketiganya | Tag `v1.0.0-M5` |
+| 0. Kesepakatan | 21–22 Okt | Isi K1–K6, K8–K10; terima undangan; baca dokumen | Naufal | Dokumen berstatus **Berlaku** |
+| 1. Pemanasan | 22 Okt | Satu PR percobaan dari Nabila dan Arta | Nabila, Arta | Dua PR tergabung |
+| 2. Kerangka website | 22–23 Okt | `chore/2.0-inisialisasi-laravel`: Laravel 13, Tailwind, halaman kosong | Nabila | `develop` dapat dijalankan lokal |
+| 3. Fondasi (M2) | 23–25 Okt | Paket 2.1–2.6: basis data, akun, hak akses, tampilan dasar | Nabila, Arta | Gerbang M2 (terlambat 11 Okt, ditutup 25 Okt) |
+| 4. Modul inti (M3) | 25–31 Okt | Paket 3.1–3.10: surat masuk/keluar, klasifikasi, impor-ekspor | Nabila, Arta | Gerbang M3 (jadwal 25 Okt, batas 31 Okt) |
+| 5. Disposisi & laporan | 1–10 Nov | Paket 4.1–5.9: disposisi, laporan, naskah, utilitas | Nabila, Arta | Modul tersedia di `develop` |
+| 6. Non-fungsional & uji (M4) | 11–15 Nov | Paket 6.1–7.8: keamanan, kinerja, matriks uji, UAT internal | Ketiganya | Gerbang M4, tag `v0.4.0-M4` |
+| 7. Rilis & serah terima (M5) | 16–27 Nov | Paket 7.9–8.6: UAT dinas, penerapan, pelatihan, serah terima | Ketiganya | Gerbang M5, tag `v1.0.0-M5` |
 
-*Tanggal tahap 4–6 mengikuti pilihan K7. Bila K7 memilih "tetap", tahap 2–3 dimampatkan.*
+*K7 menetapkan jadwal tetap, sehingga tahap 2–4 dimampatkan. Bila M3 meleset, batas
+toleransinya 31 Oktober; tanggal M4 dan M5 tidak berubah.*
 
 ---
 
@@ -197,7 +204,7 @@ Rincian aturan ada di [`git-flow.md`](git-flow.md), daftar 56 nama cabang ada di
 |---|---|---|
 | Rencana tidak disepakati | Semua berjalan tanpa aturan | Bahas K1–K10 pada satu rapat, catat hasilnya di sini |
 | Anggota lupa alur | Cabang menumpuk, konflik | Panduan satu halaman + PR percobaan di tahap 1 |
-| Jadwal WBS sudah lewat | Dokumen mitra tidak cocok dengan kenyataan | Putuskan K7 lebih dahulu |
+| Jadwal tetap dengan sisa 5 minggu | M2/M3 meleset, fase 4–8 tidak selesai | M2–M3 dimampatkan; M3 boleh geser maksimal 31 Okt; uji dinas 16–27 Nov |
 | Terlalu banyak issue | Papan penuh, sulit fokus | Hanya paket fase berjalan yang dipindah ke *Todo* |
 | Proteksi terasa menghambat | Anggota mencari jalan pintas | PM membuka jalur `hotfix` dan tinjauan cepat |
 | Hanya 3 orang | PR menunggu bila PM sibuk | Sepakati peninjau pengganti (BE↔FE) pada K3 |
@@ -212,7 +219,7 @@ Rincian aturan ada di [`git-flow.md`](git-flow.md), daftar 56 nama cabang ada di
 - [ ] K4 Nama cabang
 - [ ] K5 Cara penerapan ke hosting
 - [ ] K6 Lokasi tugas
-- [ ] K7 Jadwal (tetap atau geser)
+- [x] K7 Jadwal — **tetap** mengikuti WBS, ditetapkan 21 Oktober 2026
 - [ ] K8 Batas waktu tinjauan
 - [ ] K9 Alat komunikasi harian
 - [ ] K10 Penghapusan cabang
@@ -235,5 +242,6 @@ Rincian aturan ada di [`git-flow.md`](git-flow.md), daftar 56 nama cabang ada di
 | Versi | Tanggal | Perubahan | Oleh |
 |---|---|---|---|
 | 0.1 | 21 Oktober 2026 | Draf awal: ringkasan, keputusan K1–K10, pembagian tugas, rencana penerapan | Naufal |
+| 0.2 | 21 Oktober 2026 | K7 ditetapkan tetap; tahap penerapan disesuaikan dengan sisa waktu | Naufal |
 | 0.2 | – | – | – |
 | 1.0 | – | Disepakati dan berlaku | – |
