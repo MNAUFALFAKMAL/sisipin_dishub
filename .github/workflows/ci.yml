@@ -32,7 +32,7 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.4'
+          php-version: '8.5'
           extensions: mbstring, pdo_mysql, dom, curl, zip, gd, bcmath
           ini-values: memory_limit=512M
 
@@ -45,7 +45,7 @@ jobs:
             ${{ runner.os }}-composer-
 
       - name: Install PHP dependencies
-        run: composer install --prefer-dist --no-progress --no-interaction
+        run: composer install --prefer-dist --no-progress --no-interaction --ignore-platform-req=php
 
       - name: Cache NPM packages
         uses: actions/cache@v4
