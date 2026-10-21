@@ -39,7 +39,7 @@ Minggu 4-5 - gerbang M2 (11 Okt)
 
 ## Fase 3 - Modul Inti Kearsipan
 
-Minggu 6-7 - gerbang M3 (25 Okt)
+Minggu 6-7 - gerbang M3 (25 Okt); paket 3.4-3.9 masuk M4
 
 | Kode | Paket | PIC | Jam | Cabang |
 |---|---|---|---:|---|
