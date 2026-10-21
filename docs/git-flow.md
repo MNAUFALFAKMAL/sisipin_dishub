@@ -528,7 +528,7 @@ git push
 | Riwayat linear (squash) | Aktif |
 | Templat PR dan issue | Tersedia di `.github/` |
 | Label dan milestone | Dibuat |
-| Kolaborator | Diundang setelah nama akun diterima |
+| Kolaborator | `@nblable` diundang dengan akses Write (menunggu persetujuan); Arta menyusul setelah username diterima |
 
 Bila aturan cabang perlu diubah, PM melakukannya melalui **Settings â†’ Rules** (atau
 `gh api`), bukan dengan mematikan aturan sementara.
