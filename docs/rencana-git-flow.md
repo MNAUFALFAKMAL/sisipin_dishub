@@ -1,6 +1,6 @@
 # Rencana Alur Kerja Git — 3 Peran
 
-**Status:** Draf 0.3 — 1 dari 10 keputusan ditetapkan (K7); kolaborator sudah lengkap
+**Status:** Draf 0.5 — 1 dari 10 keputusan ditetapkan (K7); prioritas paket sudah disusun
 **Disusun:** 21 Oktober 2026
 **Diperbarui:** 21 Oktober 2026
 **Pemilik:** Naufal (PM & QA)
@@ -15,8 +15,8 @@
 
 ## 1. Ringkasan
 
-Repositori `MNAUFALFAKMAL/sisipin_dishub` akan dipakai bertiga untuk membangun website
-SISIPIN dari nol. Rencana ini mengatur: siapa mengerjakan apa, di cabang mana, kapan
+Repositori `MNAUFALFAKMAL/sisipin_dishub` akan dipakai bertiga untuk mengembangkan website
+SISIPIN secara bertahap. Rencana ini mengatur: siapa mengerjakan apa, di cabang mana, kapan
 digabung, dan bagaimana hasilnya sampai ke `main` tanpa risiko saling menimpa.
 
 Lima hal yang diusulkan:
@@ -34,7 +34,7 @@ Lima hal yang diusulkan:
 | Hal | Keadaan | Keterangan |
 |---|---|---|
 | Repositori | Ada, publik | `MNAUFALFAKMAL/sisipin_dishub` |
-| Kode aplikasi | **Belum ada** | Dimulai dari nol |
+| Kode aplikasi | **Belum ada di repositori ini** | Diisi bertahap mulai paket 2.1 |
 | Cabang `main` | Ada | 1 commit: dokumen awal |
 | Cabang `develop` | Ada | 1 commit di depan `main` |
 | Proteksi cabang | Sudah aktif | Dapat diubah/dimatikan bila tim belum siap |
@@ -200,7 +200,37 @@ Rincian aturan ada di [`git-flow.md`](git-flow.md), daftar 56 nama cabang ada di
 
 ---
 
-## 9. Risiko rencana ini
+## 9. Urutan dan prioritas paket
+
+Urutan tidak boleh dibalik karena Frontend membutuhkan kontrak rute dan nama field dari
+Backend:
+
+1. 2.1 kerangka aplikasi → 2.2 autentikasi → 2.3 tampilan masuk → 2.4 kerangka tampilan.
+2. 3.1 surat masuk → 3.2 tampilannya → 3.5 penomoran agenda → 3.6 klasifikasi → 3.7 tampilannya.
+3. 3.3 surat keluar → 3.4 tampilannya → 3.8 impor/ekspor → 3.9 rekap PDF.
+4. 4.1 skema disposisi → 4.2 alur → 4.3 tampilan → 4.4 pemberitahuan → 4.5 penanda.
+5. 5.1 dasbor → 5.2 tampilannya → 5.3 tata naskah → 5.4 tampilannya.
+6. Paket uji dikerjakan setelah paket yang diuji tergabung: 2.6 setelah 2.2, 3.10 setelah 3.9,
+   4.6 setelah 4.3, 5.9 setelah 5.7.
+
+Prioritas:
+
+| Prioritas | Paket | Catatan |
+|---|---|---|
+| Inti | 1.1–1.6, 2.1–2.4, 3.1–3.7, 3.9, 4.1–4.3, 5.1–5.2, 6.1–6.2, 7.1, 7.3–7.8, 8.1–8.3, 8.5–8.6 | Menentukan alur kerja harian dinas dan harus ada sebelum uji penerimaan |
+| Susulan | 2.5–2.6, 3.8, 3.10, 4.4–4.6, 5.3–5.4, 5.9, 6.3–6.5, 7.2, 8.4 | Dikerjakan bila paket inti pada fase yang sama sudah tergabung |
+| Ditunda | 5.5–5.7, bagian SEO pada 5.8 | Tidak menghambat pencatatan surat; dikerjakan setelah M5 bila waktu tersisa |
+
+Aturan:
+
+- Paket susulan dan ditunda tidak boleh dikerjakan sebelum paket inti pada fase yang sama selesai.
+- Paket ditunda tetap tercatat di papan, tidak dihapus, agar lingkupnya tidak hilang.
+- Bila sisa waktu sebuah paket inti kurang dari tiga hari, yang dipangkas adalah lingkup
+  paketnya, bukan tanggal M5.
+
+---
+
+## 10. Risiko rencana ini
 
 | Risiko | Bila terjadi | Pengurangan |
 |---|---|---|
@@ -213,7 +243,7 @@ Rincian aturan ada di [`git-flow.md`](git-flow.md), daftar 56 nama cabang ada di
 
 ---
 
-## 10. Yang belum diputuskan (isi saat rapat)
+## 11. Yang belum diputuskan (isi saat rapat)
 
 - [ ] K1 Model cabang
 - [ ] K2 Cara menggabung
@@ -230,7 +260,7 @@ Rincian aturan ada di [`git-flow.md`](git-flow.md), daftar 56 nama cabang ada di
 
 ---
 
-## 11. Cara mengubah rencana ini
+## 12. Cara mengubah rencana ini
 
 1. Buat cabang `docs/<kode>-<ringkas>` dari `develop`.
 2. Ubah bagian yang perlu, tambahkan baris pada riwayat perubahan.
@@ -239,7 +269,7 @@ Rincian aturan ada di [`git-flow.md`](git-flow.md), daftar 56 nama cabang ada di
 
 ---
 
-## 12. Riwayat perubahan
+## 13. Riwayat perubahan
 
 | Versi | Tanggal | Perubahan | Oleh |
 |---|---|---|---|
@@ -247,5 +277,5 @@ Rincian aturan ada di [`git-flow.md`](git-flow.md), daftar 56 nama cabang ada di
 | 0.2 | 21 Oktober 2026 | K7 ditetapkan tetap; tahap penerapan disesuaikan dengan sisa waktu | Naufal |
 | 0.3 | 21 Oktober 2026 | Kolaborator lengkap (`@nblable`, `@artaeka`); 57 issue sudah ditugaskan | Naufal |
 | 0.4 | 21 Oktober 2026 | Papan Projects dibuat; 5 kartu Todo, 52 Backlog | Naufal |
-| 0.2 | – | – | – |
+| 0.5 | 21 Oktober 2026 | Urutan dan prioritas paket (inti, susulan, ditunda); istilah "dari nol" diganti menjadi pengembangan bertahap | Naufal |
 | 1.0 | – | Disepakati dan berlaku | – |

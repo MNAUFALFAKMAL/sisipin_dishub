@@ -4,8 +4,8 @@
 > [rencana-git-flow.md](rencana-git-flow.md). Dokumen ini memuat rincian aturan dan
 > baru mengikat setelah rencana berstatus **Berlaku**.
 
-Repositori dimulai dari nol: belum ada kode aplikasi, sehingga seluruh cabang di bawah ini
-adalah jalur kerja, bukan salinan kode yang sudah ada.
+Repositori ini belum memuat kode aplikasi, sehingga seluruh cabang di bawah ini adalah jalur
+kerja, bukan riwayat kode yang sudah ada.
 
 - **Repositori:** `MNAUFALFAKMAL/sisipin_dishub`
 - **Cabang tetap:** `main` (rilis) dan `develop` (integrasi)
@@ -217,6 +217,29 @@ gh auth status
 
 Gunakan surel yang sama dengan akun GitHub. Bila berbeda, commit tidak terhubung ke akun dan
 tidak terhitung pada kontribusi.
+
+### Identitas per peran
+
+Setiap orang memakai nama dan surel sendiri. Commit yang ditulis atas nama orang lain tidak
+dihitung sebagai kontribusi orang itu.
+
+| Peran | Nama pada commit | Cabang yang dipegang |
+|---|---|---|
+| PM & QA | Muhammad Naufal Fikri Akmal | `docs/`, `test/`, `release/`, `hotfix/` |
+| Backend | Nabila Ramadhani Mujahidin | `feature/` pada `app/`, `database/`, `routes/` |
+| Frontend | Arta Eka Yuly Rajagukguk | `feature/` pada `resources/` |
+
+Surel mengikuti akun GitHub masing-masing: `@MNAUFALFAKMAL`, `@nblable`, `@artaeka`.
+
+PM memeriksa setiap Jumat:
+
+```bash
+git shortlog -sne --all
+git log -5 --format="%h %an <%ae> %s"
+```
+
+Bila semua commit tercatat atas satu nama, setelan di laptop lain belum benar — perbaiki
+sebelum PR berikutnya. Jangan memakai `git commit --author` untuk menuliskan nama orang lain.
 
 ### Push cabang baru (pertama kali)
 
@@ -598,6 +621,9 @@ Papan: [Projects SISIPIN DISHUB](https://github.com/users/MNAUFALFAKMAL/projects
 | `test` | Matriks atau skenario terisi, bukti dilampirkan |
 | `chore` | Perubahan tidak mengubah perilaku, dicatat pada catatan rilis |
 
+PR yang mengubah tampilan wajib melampirkan tangkapan layar 360 px dan 1366 px. Tanpa bukti
+itu, PR belum memenuhi definisi selesai meskipun kodenya berjalan.
+
 Definisi selesai pada WBS tetap menjadi acuan utama.
 
 ---
@@ -675,6 +701,7 @@ git push
 
 ```bash
 git fetch origin
+git shortlog -sne --all
 gh pr list --base develop
 gh pr checkout <nomor>
 php artisan test
