@@ -129,6 +129,19 @@ Minggu 12 - gerbang M5 (27 Nov)
 | 8.6 | Serah terima akun dan dokumen | Naufal | 1 | `chore/8.6-serah-terima-akun-dan-dokumen` |
 | | **Subtotal fase 8** | | **16** | |
 
+## Prioritas pengerjaan
+
+Ditetapkan 21 Oktober 2026. Paket inti tidak boleh ditunda; urutan lengkapnya ada pada
+[rencana-git-flow.md](rencana-git-flow.md) bagian 9.
+
+| Prioritas | Paket | Catatan |
+|---|---|---|
+| Inti | 1.1–1.6, 2.1–2.4, 3.1–3.7, 3.9, 4.1–4.3, 5.1–5.2, 6.1–6.2, 7.1, 7.3–7.8, 8.1–8.3, 8.5–8.6 | Wajib ada sebelum uji penerimaan |
+| Susulan | 2.5–2.6, 3.8, 3.10, 4.4–4.6, 5.3–5.4, 5.9, 6.3–6.5, 7.2, 8.4 | Dikerjakan setelah paket inti pada fase yang sama |
+| Ditunda | 5.5–5.7, bagian SEO pada 5.8 | Dikerjakan setelah M5 bila waktu tersisa |
+
+Paket yang ditunda tetap tercatat di papan dan tidak dihapus, agar lingkupnya tidak hilang.
+
 ## Rekap
 
 | Anggota | Peran | Paket | Jam |
