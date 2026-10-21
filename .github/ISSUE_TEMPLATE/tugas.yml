@@ -1,0 +1,57 @@
+name: Tugas (paket WBS)
+description: Satu paket kerja dari WBS
+title: "[x.x] "
+labels: ["jenis:feat"]
+body:
+  - type: input
+    id: wbs
+    attributes:
+      label: Kode WBS
+      description: Contoh 3.1
+      placeholder: "3.1"
+    validations:
+      required: true
+
+  - type: textarea
+    id: tujuan
+    attributes:
+      label: Tujuan
+      description: Apa yang harus tercapai, dalam satu atau dua kalimat.
+    validations:
+      required: true
+
+  - type: textarea
+    id: kriteria
+    attributes:
+      label: Definisi selesai
+      description: Salin dari kolom "Definisi selesai" pada WBS.
+    validations:
+      required: true
+
+  - type: input
+    id: kebutuhan
+    attributes:
+      label: Kebutuhan terkait
+      description: R-xx / NF-xx. Tulis "-" bila tidak ada.
+      placeholder: "R-04"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: peran
+    attributes:
+      label: Penanggung jawab
+      options:
+        - Naufal (PM & QA)
+        - Nabila (Backend)
+        - Arta (Frontend)
+    validations:
+      required: true
+
+  - type: textarea
+    id: teknis
+    attributes:
+      label: Catatan teknis
+      description: Rute, tabel, komponen, atau kontrak data yang perlu disepakati lebih dahulu.
+    validations:
+      required: false

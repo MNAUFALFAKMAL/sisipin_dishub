@@ -1,0 +1,51 @@
+name: Laporan kesalahan
+description: Perilaku yang tidak sesuai harapan
+title: "[BUG] "
+labels: ["jenis:fix"]
+body:
+  - type: textarea
+    id: langkah
+    attributes:
+      label: Langkah mereproduksi
+      placeholder: |
+        1. Buka ...
+        2. Isi ...
+        3. Muncul ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: harapan
+    attributes:
+      label: Yang diharapkan
+    validations:
+      required: true
+
+  - type: textarea
+    id: kenyataan
+    attributes:
+      label: Yang terjadi
+      description: Sertakan pesan kesalahan bila ada.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: lingkungan
+    attributes:
+      label: Lingkungan
+      options:
+        - Chrome (komputer)
+        - Edge (komputer)
+        - Firefox (komputer)
+        - Chrome Android (ponsel)
+        - Lainnya
+    validations:
+      required: true
+
+  - type: input
+    id: kebutuhan
+    attributes:
+      label: Kebutuhan terkait
+      placeholder: "R-04"
+    validations:
+      required: false

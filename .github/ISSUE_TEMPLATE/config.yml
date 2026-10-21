@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Panduan alur kerja Git
+    url: https://github.com/MNAUFALFAKMAL/sisipin_dishub/blob/develop/docs/git-flow.md
+    about: Baca sebelum membuat cabang atau PR.
