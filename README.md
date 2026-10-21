@@ -68,6 +68,38 @@ main         rilis / produksi (dilindungi)
 hotfix/<ringkas>   darurat, bercabang dari main
 ```
 
+## Autentikasi & Hak Akses (WBS 3.2.1)
+
+Sistem menggunakan **Laravel Breeze** dengan kustomisasi role-based:
+
+### Role & Redirect Login
+| Role | Slug | Redirect After Login | Akses Utama |
+|---|---|---|---|
+| Super Admin | `super_admin` | `/admin` | Semua modul + manajemen user & audit log |
+| Kepala Dinas | `kepala_dinas` | `/kepala-dinas` | Surat masuk/keluar, laporan, persetujuan |
+| Kepala Bidang | `kepala_bidang` | `/kepala-bidang` | Surat bidang, disposisi, pegawai bidang |
+| Tata Usaha | `tata_usaha` | `/tata-usaha` | Input surat, disposisi, klasifikasi arsip |
+| Pegawai | `pegawai` | `/pegawai` | Buat surat, lihat disposisi sendiri |
+| Staff | `staff` | `/pegawai` | Sama seperti Pegawai |
+
+### Middleware Proteksi Route
+```php
+// Contoh penggunaan di routes/web.php
+Route::middleware(['role:super_admin,tata_usaha'])->group(function () {
+    Route::resource('klasifikasi-arsip', KlasifikasiArsipController::class);
+});
+```
+
+### Session
+- Lifetime: **24 jam** (1440 menit) via `SESSION_LIFETIME=1440`
+- CSRF protection enabled
+- Secure cookies di production (`SESSION_SECURE_COOKIE=true`)
+
+### Default Login (setelah `php artisan migrate --seed`)
+| Username | Password | Role |
+|---|---|---|
+| `dishub2026lampung` | `dishublampung12345` | Super Admin |
+
 ## Lisensi
 
 Belum ditetapkan.

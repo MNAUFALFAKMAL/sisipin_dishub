@@ -91,6 +91,28 @@ Route::get('/serve-file/{path}', function ($path) {
 // ── Dashboard ──────────────────────────────────────────────────────────────
 Route::middleware(['auth'])->group(function () {
 
+    // Role-specific dashboards
+    Route::get('/admin', function () {
+        return view('dashboards.admin');
+    })->name('admin.dashboard')->middleware('role:super_admin');
+
+    Route::get('/tata-usaha', function () {
+        return view('dashboards.tata-usaha');
+    })->name('tata-usaha.dashboard')->middleware('role:tata_usaha');
+
+    Route::get('/pegawai', function () {
+        return view('dashboards.pegawai');
+    })->name('pegawai.dashboard')->middleware('role:pegawai');
+
+    Route::get('/kepala-dinas', function () {
+        return view('dashboards.kepala-dinas');
+    })->name('kepala-dinas.dashboard')->middleware('role:kepala_dinas');
+
+    Route::get('/kepala-bidang', function () {
+        return view('dashboards.kepala-bidang');
+    })->name('kepala-bidang.dashboard')->middleware('role:kepala_bidang');
+
+    // Default dashboard (fallback)
     Route::get('/dashboard', [DashboardKearsipanController::class, 'index'])->name('dashboard');
     Route::get('/dashboard/export/excel', [DashboardKearsipanController::class, 'exportExcel'])->name('dashboard.export.excel');
     Route::get('/dashboard/export/pdf', [DashboardKearsipanController::class, 'exportPdf'])->name('dashboard.export.pdf');

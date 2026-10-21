@@ -29,7 +29,25 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended('/dashboard');
+        // Redirect based on role
+        return redirect()->intended($this->getDashboardRoute(Auth::user()));
+    }
+
+    /**
+     * Get dashboard route based on user role.
+     */
+    protected function getDashboardRoute($user): string
+    {
+        $role = $user->peran?->slug ?? $user->role ?? 'staff';
+
+        return match ($role) {
+            'super_admin' => '/admin',
+            'tata_usaha' => '/tata-usaha',
+            'pegawai' => '/pegawai',
+            'kepala_dinas' => '/kepala-dinas',
+            'kepala_bidang' => '/kepala-bidang',
+            default => '/pegawai',
+        };
     }
 
     /**

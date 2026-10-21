@@ -99,6 +99,11 @@ class User extends Authenticatable
         return $this->peran?->slug === 'tata_usaha';
     }
 
+    public function isPegawai(): bool
+    {
+        return $this->peran?->slug === 'pegawai';
+    }
+
     /**
      * Cek apakah user memiliki salah satu dari role yang diberikan.
      */
