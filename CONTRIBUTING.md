@@ -1,8 +1,9 @@
 # Panduan Kontribusi
 
 Panduan lengkap ada di [`docs/git-flow.md`](docs/git-flow.md). Rencana yang sedang dibahas
-tim ada di [`docs/rencana-git-flow.md`](docs/rencana-git-flow.md); peta 56 paket kerja ada di
-[`docs/peta-paket-cabang.md`](docs/peta-paket-cabang.md). Halaman ini hanya ringkasannya.
+tim ada di [`docs/rencana-git-flow.md`](docs/rencana-git-flow.md); peta 75 tugas kerja ada di
+[`docs/peta-paket-cabang.md`](docs/peta-paket-cabang.md); strategi branching di
+[`docs/git-branching.md`](docs/git-branching.md). Halaman ini hanya ringkasannya.
 
 ## Tiga aturan yang tidak boleh dilanggar
 
@@ -15,11 +16,11 @@ tim ada di [`docs/rencana-git-flow.md`](docs/rencana-git-flow.md); peta 56 paket
 ```bash
 git checkout develop
 git pull --ff-only
-git checkout -b feature/3.1-surat-masuk
+git checkout -b feature/3.4.1-surat-masuk-crud-bidang-tujuan-klasifikasi
 
 # ...kerjakan, commit kecil dan sering...
 git add -p
-git commit -m "feat(3.1): catat surat masuk dan unggah lampiran" -m "Refs: WBS 3.1, R-04"
+git commit -m "feat(3.4.1): catat surat masuk dan unggah lampiran" -m "Refs: WBS 3.4.1, R-04"
 
 git push -u origin HEAD
 gh pr create --base develop --fill

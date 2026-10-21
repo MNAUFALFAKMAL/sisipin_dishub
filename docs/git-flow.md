@@ -64,6 +64,8 @@ Aturan tambahan:
 
 Pola: `<tipe>/<kode-wbs>-<ringkasan-3-sampai-6-kata>`
 
+> Detail strategi branching lengkap: [`docs/git-branching.md`](git-branching.md)
+
 | Tipe | Contoh |
 |---|---|
 | `feature` | `feature/3.4.1-surat-masuk-crud-bidang-tujuan-klasifikasi` |
@@ -209,7 +211,37 @@ gh auth login                       # pilih GitHub.com, HTTPS
 gh auth setup-git                   # pemasangan kredensial untuk repo ini
 ```
 
-Periksa sekali:
+### Conventional Commits (commitlint + husky)
+
+Sudah dikonfigurasi di repositori (WBS 3.1.2):
+
+```bash
+# Sudah terpasang via npm:
+npm install -D @commitlint/cli @commitlint/config-conventional husky
+npx husky init
+echo 'npx --no-install commitlint --edit "$1"' > .husky/commit-msg
+
+# Template commit (opsional):
+git config commit.template .gitmessage
+git config core.hooksPath .husky
+```
+
+Format validasi otomatis saat `git commit`:
+- Tipe: `feat`, `fix`, `docs`, `test`, `refactor`, `style`, `perf`, `chore`, `revert`, `ci`
+- Scope wajib: kode WBS 3 tingkat (contoh: `3.4.1`)
+- Subject: imperative, lowercase, no period, max 72 char
+- Footer wajib: `Refs: WBS <kode>, R-<xx>/NF-<xx>`
+
+Contoh commit valid:
+```
+feat(3.4.1): catat surat masuk beserta lampiran
+
+- nomor agenda unik per tahun
+- batas 5 lampiran, 5 MB per berkas
+Refs: WBS 3.4.1, R-04
+```
+
+Commit yang gagal validasi akan ditolak sebelum masuk history.
 
 ```bash
 git config --get user.name
