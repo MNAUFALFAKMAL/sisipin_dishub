@@ -52,8 +52,8 @@ Yang tidak boleh:
 Cara mengirim hasil:
 
 ```
-git add .
-git commit -m "feat(2.1): siapkan kerangka Laravel, Tailwind, dan basis data"
+git add -p
+git commit -m "feat(2.1): siapkan kerangka Laravel, Tailwind, dan basis data" -m "Refs: WBS 2.1"
 git push -u origin HEAD
 ```
 
