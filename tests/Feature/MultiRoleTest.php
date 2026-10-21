@@ -12,7 +12,7 @@ class MultiRoleTest extends TestCase
 
     public function test_staff_cannot_access_pengguna_and_auditlog()
     {
-        $staff = User::factory()->create(['role' => 'staff']);
+        $staff = User::factory()->staff()->create();
 
         $responsePengguna = $this->actingAs($staff)->get('/pengguna');
         $responsePengguna->assertStatus(403);
@@ -23,7 +23,7 @@ class MultiRoleTest extends TestCase
 
     public function test_tata_usaha_can_access_surat_masuk_and_klasifikasi()
     {
-        $tu = User::factory()->create(['role' => 'tata_usaha']);
+        $tu = User::factory()->tataUsaha()->create();
 
         $responseSurat = $this->actingAs($tu)->get('/surat-masuk?jenis_surat=Surat+Masuk&tahun=' . date('Y'));
         $responseSurat->assertStatus(200);
@@ -34,7 +34,7 @@ class MultiRoleTest extends TestCase
 
     public function test_super_admin_can_access_pengguna()
     {
-        $admin = User::factory()->create(['role' => 'super_admin']);
+        $admin = User::factory()->superAdmin()->create();
 
         $response = $this->actingAs($admin)->get('/pengguna');
         $response->assertStatus(200);
@@ -42,7 +42,7 @@ class MultiRoleTest extends TestCase
 
     public function test_tata_usaha_cannot_access_pengguna()
     {
-        $tu = User::factory()->create(['role' => 'tata_usaha']);
+        $tu = User::factory()->tataUsaha()->create();
 
         $response = $this->actingAs($tu)->get('/pengguna');
         $response->assertStatus(403);
@@ -50,7 +50,7 @@ class MultiRoleTest extends TestCase
 
     public function test_staff_cannot_access_templates_index()
     {
-        $staff = User::factory()->create(['role' => 'staff']);
+        $staff = User::factory()->staff()->create();
 
         $response = $this->actingAs($staff)->get('/templates');
         $response->assertStatus(403);
@@ -58,7 +58,7 @@ class MultiRoleTest extends TestCase
 
     public function test_tata_usaha_can_access_templates_index()
     {
-        $tu = User::factory()->create(['role' => 'tata_usaha']);
+        $tu = User::factory()->tataUsaha()->create();
 
         $response = $this->actingAs($tu)->get('/templates');
         $response->assertStatus(200);
