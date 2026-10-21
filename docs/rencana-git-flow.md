@@ -1,6 +1,6 @@
 # Rencana Alur Kerja Git — 3 Peran
 
-**Status:** Draf 0.2 — 1 dari 10 keputusan ditetapkan (K7)
+**Status:** Draf 0.3 — 1 dari 10 keputusan ditetapkan (K7); kolaborator sudah lengkap
 **Disusun:** 21 Oktober 2026
 **Diperbarui:** 21 Oktober 2026
 **Pemilik:** Naufal (PM & QA)
@@ -40,7 +40,7 @@ Lima hal yang diusulkan:
 | Proteksi cabang | Sudah aktif | Dapat diubah/dimatikan bila tim belum siap |
 | Issue | 56 buah | Satu per paket WBS, sudah berlabel |
 | Milestone | 5 buah | M1–M5 |
-| Kolaborator | 1 dari 2 | `@nblable` (Backend) menunggu menerima undangan |
+| Kolaborator | 2 dari 2 | `@nblable` (Backend) dan `@artaeka` (Frontend), akses Write |
 | Kontribusi kode | Belum ada | Belum ada PR fitur |
 
 *Bagian yang sudah aktif di atas disiapkan agar rencana dapat langsung dicoba. Bila tim
@@ -125,7 +125,7 @@ Contoh nyata:
 
 | No | Tugas | Kapan | Status |
 |---|---|---|---|
-| 1 | Menerima undangan GitHub dan mencoba satu PR percobaan | 22–23 Okt | ☐ |
+| 1 | Undangan diterima; mencoba satu PR percobaan | 22–23 Okt | ☐ |
 | 2 | Menetapkan kontrak rute dan nama field untuk Frontend | sebelum modul dimulai | ☐ |
 | 3 | Mengerjakan paket `feature/` sesuai urutan WBS | harian | ☐ |
 | 4 | Menulis uji fitur untuk setiap paket | bersamaan | ☐ |
@@ -136,7 +136,7 @@ Contoh nyata:
 
 | No | Tugas | Kapan | Status |
 |---|---|---|---|
-| 1 | Mengirim username GitHub untuk diundang | 22 Okt | ☐ |
+| 1 | Akun GitHub aktif, menerima undangan `@artaeka` | 22 Okt | ☑ |
 | 2 | Menyiapkan kerangka tampilan (layout, komponen) | paket 2.3–2.4 | ☐ |
 | 3 | Mengerjakan paket `feature/` tampilan sesuai WBS | harian | ☐ |
 | 4 | Memeriksa 360 px dan 1366 px pada 4 peramban | setiap PR tampilan | ☐ |
@@ -243,5 +243,6 @@ Rincian aturan ada di [`git-flow.md`](git-flow.md), daftar 56 nama cabang ada di
 |---|---|---|---|
 | 0.1 | 21 Oktober 2026 | Draf awal: ringkasan, keputusan K1–K10, pembagian tugas, rencana penerapan | Naufal |
 | 0.2 | 21 Oktober 2026 | K7 ditetapkan tetap; tahap penerapan disesuaikan dengan sisa waktu | Naufal |
+| 0.3 | 21 Oktober 2026 | Kolaborator lengkap (`@nblable`, `@artaeka`); 57 issue sudah ditugaskan | Naufal |
 | 0.2 | – | – | – |
 | 1.0 | – | Disepakati dan berlaku | – |
