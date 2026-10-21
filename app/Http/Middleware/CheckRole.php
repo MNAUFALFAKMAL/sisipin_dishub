@@ -11,6 +11,7 @@ class CheckRole
     /**
      * Handle an incoming request.
      * Penggunaan: route()->middleware('role:super_admin,kepala_dinas')
+     * Role slug: super_admin, tata_usaha, pegawai, kepala_dinas, kepala_bidang, staff
      */
     public function handle(Request $request, Closure $next, string ...$roles): Response
     {
@@ -24,7 +25,9 @@ class CheckRole
                 ->withErrors(['email' => 'Akun Anda telah dinonaktifkan. Hubungi administrator.']);
         }
 
-        if (! in_array($request->user()->role, $roles)) {
+        $userRole = $request->user()->peran?->slug ?? $request->user()->role ?? 'staff';
+
+        if (! in_array($userRole, $roles)) {
             abort(403, 'Anda tidak memiliki akses ke halaman ini.');
         }
 
