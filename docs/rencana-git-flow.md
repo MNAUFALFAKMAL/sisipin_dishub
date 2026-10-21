@@ -40,6 +40,7 @@ Lima hal yang diusulkan:
 | Proteksi cabang | Sudah aktif | Dapat diubah/dimatikan bila tim belum siap |
 | Issue | 56 buah | Satu per paket WBS, sudah berlabel |
 | Milestone | 5 buah | M1–M5 |
+| Papan proyek | Ada | Projects "SISIPIN DISHUB": Backlog, Todo, In Progress, Review, Done (57 kartu) |
 | Kolaborator | 2 dari 2 | `@nblable` (Backend) dan `@artaeka` (Frontend), akses Write |
 | Kontribusi kode | Belum ada | Belum ada PR fitur |
 
@@ -245,5 +246,6 @@ Rincian aturan ada di [`git-flow.md`](git-flow.md), daftar 56 nama cabang ada di
 | 0.1 | 21 Oktober 2026 | Draf awal: ringkasan, keputusan K1–K10, pembagian tugas, rencana penerapan | Naufal |
 | 0.2 | 21 Oktober 2026 | K7 ditetapkan tetap; tahap penerapan disesuaikan dengan sisa waktu | Naufal |
 | 0.3 | 21 Oktober 2026 | Kolaborator lengkap (`@nblable`, `@artaeka`); 57 issue sudah ditugaskan | Naufal |
+| 0.4 | 21 Oktober 2026 | Papan Projects dibuat; 5 kartu Todo, 52 Backlog | Naufal |
 | 0.2 | – | – | – |
 | 1.0 | – | Disepakati dan berlaku | – |

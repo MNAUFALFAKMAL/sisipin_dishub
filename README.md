@@ -43,7 +43,7 @@ tempat integrasi, dan setiap paket kerja dikerjakan pada cabang sendiri.
 - Matriks uji R-01…R-20: [`docs/matriks-uji.md`](docs/matriks-uji.md)
 - Agenda kick-off: [`docs/rapat/2026-10-22-kickoff.md`](docs/rapat/2026-10-22-kickoff.md)
 - Ringkasan kontribusi: [`CONTRIBUTING.md`](CONTRIBUTING.md)
-- Papan pekerjaan: Issues + Milestone M1–M5
+- Papan pekerjaan: [Projects SISIPIN DISHUB](https://github.com/users/MNAUFALFAKMAL/projects/1) · Issues · Milestone M1–M5
 - Jangan pernah menulis langsung ke `main` atau `develop`.
 
 ## Struktur cabang
