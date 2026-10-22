@@ -38,6 +38,12 @@
                         Edit
                     </x-button>
                 @endcan
+                <a href="{{ route('surat-masuk.export.pdf', $suratMasuk) }}" target="_blank" class="btn-secondary">
+                    <svg class="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2h2m-6-8V5a2 2 0 114 0v5a2 2 0 11-4 0z"/>
+                    </svg>
+                    Cetak PDF
+                </a>
                 <x-button variant="secondary" href="{{ route('surat-masuk.index', ['jenis_surat' => $jenisActive, 'tahun' => $suratMasuk->tahun]) }}">← Kembali</x-button>
             </div>
         </div>

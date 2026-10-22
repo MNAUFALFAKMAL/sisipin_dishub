@@ -75,7 +75,8 @@
             "advisories": {
                 "block": false
             }
-        }
+        },
+        "platform-check": false
     },
     "minimum-stability": "stable",
     "prefer-stable": true
