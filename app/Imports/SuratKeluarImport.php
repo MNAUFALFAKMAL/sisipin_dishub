@@ -5,26 +5,100 @@ namespace App\Imports;
 use App\Models\SuratKeluar;
 use App\Models\KlasifikasiArsip;
 use App\Models\Bidang;
-use App\Services\SuratService;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
+use Maatwebsite\Excel\Concerns\WithValidation;
+use Maatwebsite\Excel\Concerns\WithBatchInserts;
+use Maatwebsite\Excel\Concerns\WithChunkReading;
+use Maatwebsite\Excel\Concerns\Importable;
+use Maatwebsite\Excel\Concerns\SkipsEmptyRows;
+use Maatwebsite\Excel\Concerns\SkipsFailures;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Carbon;
 
-class SuratKeluarImport implements ToModel, WithHeadingRow
+class SuratKeluarImport implements \Maatwebsite\Excel\Concerns\ToModel, \Maatwebsite\Excel\Concerns\WithHeadingRow, \Maatwebsite\Excel\Concerns\WithValidation, \Maatwebsite\Excel\Concerns\WithBatchInserts, \Maatwebsite\Excel\Concerns\WithChunkReading, \Maatwebsite\Excel\Concerns\SkipsEmptyRows
 {
+    use \Maatwebsite\Excel\Concerns\Importable;
+
     protected ?string $defaultJenisSurat;
     protected ?int $defaultTahun;
+    protected array $errors = [];
+    protected int $rowCount = 0;
+    protected int $successCount = 0;
+    protected int $errorCount = 0;
 
-    public function __construct(?string $defaultJenisSurat = 'Surat Keluar', ?int $defaultTahun = null)
+    public function __construct(?string $defaultJenisSurat = 'SPT', ?int $defaultTahun = null)
     {
-        $this->defaultJenisSurat = $defaultJenisSurat ?: 'Surat Keluar';
+        $this->defaultJenisSurat = $defaultJenisSurat ?: 'SPT';
         $this->defaultTahun = $defaultTahun;
+    }
+
+    public function chunkSize(): int
+    {
+        return 100;
+    }
+
+    public function batchSize(): int
+    {
+        return 100;
+    }
+
+    public function limit(): int
+    {
+        return 10000;
+    }
+
+    public function rules(): array
+    {
+        return [
+            'no_agenda' => 'required|string|max:50',
+            'tahun' => 'required|integer|min:2020|max:2030',
+            'no_surat' => 'required|string|max:100',
+            'tanggal_surat' => 'required|date|before_or_equal:today',
+            'tanggal_terima' => 'required|date|before_or_equal:today',
+            'jenis_surat' => 'required|in:SPT,SPPD,SK,Undangan',
+            'tujuan' => 'required|string|max:500',
+            'perihal' => 'required|string|max:255',
+            'isi_ringkas' => 'nullable|string|max:1000',
+            'klasifikasi_id' => 'required|exists:klasifikasi_arsips,id',
+            'bidang_id' => 'required|exists:bidangs,id',
+            'penandatangan' => 'required|string|max:150',
+            'keterangan' => 'nullable|string|max:1000',
+            'indeks_berkas' => 'nullable|string|max:100',
+            'tingkat_keamanan' => 'nullable|in:Biasa,Rahasia,Sangat Rahasia,Terbatas',
+            'masa_simpan' => 'nullable|string|max:100',
+        ];
+    }
+
+    public function customValidationMessages()
+    {
+        return [
+            'no_agenda.required' => 'Nomor agenda wajib diisi.',
+            'no_agenda.unique' => 'Nomor agenda sudah digunakan untuk tahun ini.',
+            'tahun.required' => 'Tahun wajib diisi.',
+            'tahun.exists' => 'Tahun tidak valid atau belum terdaftar di master tahun arsip.',
+            'no_surat.required' => 'Nomor surat wajib diisi.',
+            'tanggal_surat.required' => 'Tanggal surat wajib diisi.',
+            'tanggal_surat.before_or_equal' => 'Tanggal surat tidak boleh melebihi hari ini.',
+            'tanggal_terima.required' => 'Tanggal keluar wajib diisi.',
+            'tanggal_terima.before_or_equal' => 'Tanggal keluar tidak boleh melebihi hari ini.',
+            'jenis_surat.required' => 'Jenis surat wajib dipilih.',
+            'jenis_surat.in' => 'Jenis surat tidak valid. Pilih: SPT, SPPD, SK, atau Undangan.',
+            'tujuan.required' => 'Tujuan surat wajib diisi.',
+            'perihal.required' => 'Perihal wajib diisi.',
+            'klasifikasi_id.required' => 'Klasifikasi arsip wajib dipilih.',
+            'klasifikasi_id.exists' => 'Klasifikasi arsip tidak valid.',
+            'bidang_id.required' => 'Bidang wajib dipilih.',
+            'bidang_id.exists' => 'Bidang tidak valid.',
+            'penandatangan.required' => 'Penandatangan wajib diisi.',
+        ];
     }
 
     public function model(array $row)
     {
         // 1. Determine jenis_surat
-        $jenisSurat = $this->defaultJenisSurat;
+        $jenisSurat = 'SPT';
         $inputJenis = $row['jenis_surat'] ?? null;
         if ($inputJenis) {
             $inputJenis = trim($inputJenis);
@@ -35,22 +109,25 @@ class SuratKeluarImport implements ToModel, WithHeadingRow
                 'sk (surat keterangan)' => 'SK (Surat Keterangan)',
                 'sk'                    => 'SK (Surat Keterangan)',
                 'spt'                   => 'SPT',
+                'sppd'                  => 'SPPD',
+                'undangan keluar'       => 'Undangan Keluar',
+                'undangan'              => 'Undangan Keluar',
             ];
             $lower = strtolower($inputJenis);
-            if (isset($map[$lower])) {
-                $jenisSurat = $map[$lower];
+            if (isset($map[strtolower($inputJenis)])) {
+                $jenisSurat = $map[strtolower($inputJenis)];
             }
         }
 
         // 2. Parse no_agenda (Nomor Urut)
-        $noAgendaRaw = $row['nomor_urut'] ?? $row['no_urut'] ?? $row['no_agenda'] ?? $row['nomor_agenda'] ?? null;
+        $noAgendaRaw = $row['no_agenda'] ?? $row['nomor_urut'] ?? $row['no_urut'] ?? $row['nomor_agenda'] ?? null;
         $noAgenda = null;
         if ($noAgendaRaw !== null && $noAgendaRaw !== '') {
             $noAgenda = is_numeric($noAgendaRaw) ? (string)(int)$noAgendaRaw : trim((string)$noAgendaRaw);
         }
 
         // 3. Parse Dates
-        $tanggalTerimaRaw = $row['tanggal'] ?? $row['tanggal_terima'] ?? $row['tgl_terima'] ?? $row['tanggal_keluar'] ?? $row['tgl_keluar'] ?? null;
+        $tanggalTerimaRaw = $row['tanggal_terima'] ?? $row['tanggal'] ?? $row['tgl_terima'] ?? $row['tanggal_keluar'] ?? $row['tgl_keluar'] ?? null;
         $tanggalTerima = $this->parseDate($tanggalTerimaRaw);
 
         $tanggalSuratRaw = $row['tanggal_surat'] ?? $row['tgl_surat'] ?? null;
@@ -63,147 +140,117 @@ class SuratKeluarImport implements ToModel, WithHeadingRow
         }
 
         // 4. Find classification code
-        $kodeRaw = $row['kode'] ?? $row['kode_klasifikasi'] ?? $row['klasifikasi'] ?? null;
+        $kodeRaw = $row['klasifikasi_id'] ?? $row['kode'] ?? $row['kode_klasifikasi'] ?? $row['klasifikasi'] ?? null;
         $klasifikasiId = $this->findKlasifikasiId($kodeRaw);
 
-        // 5. Tentukan tahun untuk scoping (gunakan tahun dari parameter, atau tanggal surat/terima, atau tahun sekarang)
+        // 5. Find bidang
+        $bidangRaw = $row['bidang_id'] ?? $row['bidang'] ?? $row['bidang_id'] ?? null;
+        $bidangId = $this->findBidangId($bidangRaw);
+
+        // 5. Map attributes
+        $tujuan = $this->getString($row, ['tujuan', 'tujuan_surat']);
+        $noSurat = $this->getString($row, ['no_surat', 'nomor_surat']);
+        $perihal = $this->getString($row, ['perihal', 'uraian', 'isi_ringkas']);
+        $isiRingkas = $this->getString($row, ['isi_ringkas', 'isi']);
+        $penandatangan = $this->getString($row, ['penandatangan', 'penandatangan']);
+        $keterangan = $this->getString($row, ['keterangan', 'ket']);
+        $indeksBerkas = $this->getString($row, ['indeks_berkas', 'indeks']);
+        $tingkatKeamanan = $this->getString($row, ['tingkat_keamanan', 'keamanan']);
+        $masaSimpan = $this->getString($row, ['masa_simpan', 'masa']);
+
+        // Skip completely empty rows
+        if (empty($row['no_agenda']) && empty($row['no_surat']) && empty($row['perihal']) && empty($row['tujuan'])) {
+            return null;
+        }
+
+        // Determine year
         $year = $this->defaultTahun
             ? $this->defaultTahun
-            : ($tanggalSurat ? (int)\Carbon\Carbon::parse($tanggalSurat)->year
-              : ($tanggalTerima ? (int)\Carbon\Carbon::parse($tanggalTerima)->year : (int)date('Y')));
+            : ($this->parseDate($row['tanggal_surat'] ?? $row['tgl_surat'] ?? null) 
+                ? (int)\Carbon\Carbon::parse($this->parseDate($row['tanggal_surat'] ?? $row['tgl_surat'] ?? null))->year 
+                : (int)date('Y'));
 
-        // 6. Map attributes — JANGAN paksa fallback jika kosong, ikuti data apa adanya
-        $tujuan     = isset($row['tujuan']) && $row['tujuan'] !== '' ? trim((string)$row['tujuan'])
-                    : (isset($row['tujuan_surat']) && $row['tujuan_surat'] !== '' ? trim((string)$row['tujuan_surat']) : null);
-        $noSurat    = isset($row['nomor_surat']) && $row['nomor_surat'] !== '' ? trim((string)$row['nomor_surat'])
-                    : (isset($row['no_surat']) && $row['no_surat'] !== '' ? trim((string)$row['no_surat']) : null);
-        
-        // Auto-generate no_surat jika kosong dan ada klasifikasi serta no_agenda
+        // Auto-generate no_surat if empty
+        $noSurat = $this->getString($row, ['no_surat', 'nomor_surat']);
         if (empty($noSurat) && $klasifikasiId && !empty($noAgenda)) {
-            $klasifikasiObj = KlasifikasiArsip::find($klasifikasiId);
+            $klasifikasiObj = \App\Models\KlasifikasiArsip::find($this->findKlasifikasiId($row['klasifikasi_id'] ?? $row['kode'] ?? $row['kode_klasifikasi'] ?? $row['klasifikasi']));
             if ($klasifikasiObj) {
                 $noSurat = sprintf('%s/%s/V.13/%s', trim($klasifikasiObj->kode), $noAgenda, $year);
             }
         }
 
-        $perihal    = isset($row['uraian']) && $row['uraian'] !== '' ? trim((string)$row['uraian'])
-                    : (isset($row['perihal']) && $row['perihal'] !== '' ? trim((string)$row['perihal'])
-                    : (isset($row['isi_ringkas']) && $row['isi_ringkas'] !== '' ? trim((string)$row['isi_ringkas']) : null));
-        $keterangan = isset($row['keterangan']) && $row['keterangan'] !== '' ? trim((string)$row['keterangan'])
-                    : (isset($row['ket']) && $row['ket'] !== '' ? trim((string)$row['ket']) : null);
-
-        // Skip completely empty rows (tidak ada satu pun identifier bermakna)
-        if (empty($noAgenda) && empty($noSurat) && empty($perihal) && empty($tujuan)) {
-            return null;
-        }
-
-        // Tentukan tahun untuk scoping sudah dipindah ke langkah 5 di atas
-
-        // 7. Gap-fill placeholder (sama persis dengan logika store() di controller)
-        if (is_numeric($noAgenda)) {
-            $targetInt = (int)$noAgenda;
-            $cacheKey = $jenisSurat . '-' . $year;
-            
-            static $maxGapFilled = [];
-            if (!isset($maxGapFilled[$cacheKey])) {
-                $maxGapFilled[$cacheKey] = 0;
-            }
-
-            if ($targetInt > $maxGapFilled[$cacheKey]) {
-                // Cari semua agenda yang sudah ada di database untuk tahun dan jenis ini
-                $existingAgendas = SuratKeluar::where('jenis_surat', $jenisSurat)
-                    ->where('tahun', $year)
-                    ->pluck('no_agenda')
-                    ->filter(function($val) {
-                        return is_numeric($val);
-                    })
-                    ->map(function($val) {
-                        return (int)$val;
-                    })
-                    ->toArray();
-
-                $existingMap = array_flip($existingAgendas);
-
-                $placeholdersToInsert = [];
-                for ($i = 1; $i < $targetInt; $i++) {
-                    if (!isset($existingMap[$i])) {
-                        $placeholdersToInsert[] = [
-                            'no_agenda'    => (string)$i,
-                            'jenis_surat'  => $jenisSurat,
-                            'tahun'        => $year,
-                            'no_surat'     => null,
-                            'tanggal_surat'=> null,
-                            'tanggal_terima'=> null,
-                            'tujuan'       => null,
-                            'perihal'      => null,
-                            'isi_ringkas'  => null,
-                            'keterangan'   => null,
-                            'dibuat_oleh'  => Auth::id(),
-                            'created_at'   => now(),
-                            'updated_at'   => now(),
-                        ];
-                        $existingMap[$i] = true;
-                    }
-                }
-                
-                if (!empty($placeholdersToInsert)) {
-                    foreach (array_chunk($placeholdersToInsert, 500) as $chunk) {
-                        SuratKeluar::insert($chunk);
-                    }
-                }
-
-                $maxGapFilled[$cacheKey] = $targetInt;
-            }
-        }
-
-        // 8. Cek apakah no_agenda sudah ada (duplikasi)
-        $existing = null;
-        $isPlaceholder = false;
+        // Check duplicate no_agenda
         if ($noAgenda !== null) {
-            $existing = SuratKeluar::where('jenis_surat', $jenisSurat)
+            $existing = SuratKeluar::where('jenis_surat', 'SPT')
                 ->where('tahun', $year)
                 ->where('no_agenda', $noAgenda)
                 ->first();
 
-            $isPlaceholder = $existing && SuratService::isPlaceholder($existing);
-
-            // Jika sudah ada data aktif, skip baris ini (jangan overwrite)
-            if ($existing && !$isPlaceholder) {
-                return null;
+            if ($existing) {
+                return null; // Skip duplicate
             }
         }
 
-        // 9. Simpan data ke database
-        $payload = [
-            'no_agenda'      => $noAgenda,
-            'klasifikasi_id' => $klasifikasiId,
-            'jenis_surat'    => $jenisSurat,
-            'tahun'          => $year,
-            'no_surat'       => $noSurat,
-            'tanggal_surat'  => $tanggalSurat,
-            'tanggal_terima' => $tanggalTerima,
-            'tujuan'         => $tujuan,
-            'perihal'        => $perihal,
-            'isi_ringkas'    => $perihal,
-            'keterangan'     => $keterangan,
-            'dibuat_oleh'    => Auth::id(),
+        try {
+            DB::beginTransaction();
+            
+            $suratKeluar = \App\Models\SuratKeluar::create([
+                'no_agenda'       => $noAgenda,
+                'tahun'           => $year,
+                'jenis_surat'     => $this->getString($row, ['jenis_surat']) ?: 'SPT',
+                'no_surat'        => $this->getString($row, ['no_surat', 'nomor_surat']),
+                'tanggal_surat'   => $this->parseDate($row['tanggal_surat'] ?? $row['tgl_surat']),
+                'tanggal_terima'  => $this->parseDate($row['tanggal_terima'] ?? $row['tanggal_terima']),
+                'tujuan'          => $this->getString($row, ['tujuan', 'tujuan_surat']),
+                'perihal'         => $this->getString($row, ['perihal', 'uraian']),
+                'isi_ringkas'     => $this->getString($row, ['isi_ringkas', 'isi']),
+                'klasifikasi_id'  => $this->findKlasifikasiId($row['klasifikasi_id'] ?? $row['kode'] ?? $row['kode_klasifikasi'] ?? $row['klasifikasi']),
+                'bidang_id'       => $this->findBidangId($row['bidang_id'] ?? $row['bidang']),
+                'penandatangan'   => $this->getString($row, ['penandatangan', 'penandatangan']),
+                'file_surat'      => null,
+                'dibuat_oleh'     => Auth::id(),
+                'keterangan'      => $this->getString($row, ['keterangan', 'ket']),
+                'indeks_berkas'   => $this->getString($row, ['indeks_berkas', 'indeks']),
+                'tingkat_keamanan'=> $this->getString($row, ['tingkat_keamanan', 'keamanan']),
+                'masa_simpan'     => $this->getString($row, ['masa_simpan', 'masa']),
+                'status'          => 'draft',
+            ]);
+
+            DB::commit();
+            
+            return null; // Return null to prevent double save
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return null;
+        }
+    }
+
+    public function onFailure(\Throwable $e): void
+    {
+        $this->errors[] = [
+            'row' => $this->rowCount,
+            'error' => $e->getMessage(),
         ];
+    }
 
-        if ($existing && $isPlaceholder) {
-            // Update placeholder dengan data riil
-            $existing->update($payload);
-            $surat = $existing;
-        } else {
-            $surat = SuratKeluar::create($payload);
-        }
+    public function getErrors(): array
+    {
+        return $this->errors;
+    }
 
-        // 10. Attach Bidang
-        $disposisiRaw = $row['disposisi'] ?? $row['bidang'] ?? null;
-        if ($disposisiRaw !== null && $disposisiRaw !== '') {
-            $this->attachBidangs($surat, (string)$disposisiRaw);
-        }
+    public function getSuccessCount(): int
+    {
+        return $this->successCount;
+    }
 
-        return null; // Return null agar Laravel Excel tidak double-save
+    public function getErrorCount(): int
+    {
+        return $this->errorCount;
+    }
+
+    public function getRowCount(): int
+    {
+        return $this->rowCount;
     }
 
     protected function parseDate($value): ?string
@@ -225,10 +272,8 @@ class SuratKeluarImport implements ToModel, WithHeadingRow
         $cleaned = trim((string) $value);
         if (empty($cleaned) || $cleaned === '-') return null;
 
-        // Clean common unicode spacing or non-breaking spaces
         $cleaned = str_replace(chr(194).chr(160), ' ', $cleaned);
 
-        // Try parsing Indonesian Month names, e.g. "1 Juli 2026"
         if (preg_match('/^(\d{1,2})\s+(\w+)\s+(\d{4})$/i', $cleaned, $m)) {
             $bulanMap = [
                 'januari' => '01', 'februari' => '02', 'maret' => '03', 'mrt' => '03',
@@ -243,7 +288,6 @@ class SuratKeluarImport implements ToModel, WithHeadingRow
             }
         }
 
-        // Try standard dd/mm/yyyy or dd-mm-yyyy format
         $normalized = str_replace('/', '-', $cleaned);
         $parts = explode('-', $normalized);
         if (count($parts) === 3) {
@@ -269,7 +313,7 @@ class SuratKeluarImport implements ToModel, WithHeadingRow
         if (empty($kode)) return null;
         $kode = trim($kode);
 
-        $klasifikasi = KlasifikasiArsip::where('kode', $kode)->first();
+        $klasifikasi = \App\Models\KlasifikasiArsip::where('kode', $kode)->first();
         if ($klasifikasi) return $klasifikasi->id;
 
         $parts = explode('.', $kode);
@@ -277,42 +321,34 @@ class SuratKeluarImport implements ToModel, WithHeadingRow
             array_pop($parts);
             $parentKode = implode('.', $parts);
             if (empty($parentKode)) break;
-            $parent = KlasifikasiArsip::where('kode', $parentKode)->first();
+            $parent = \App\Models\KlasifikasiArsip::where('kode', $parentKode)->first();
             if ($parent) return $parent->id;
         }
 
         return null;
     }
 
-    protected function attachBidangs($surat, ?string $disposisiText): void
+    protected function findBidangId(?string $kode): ?int
     {
-        if (empty($disposisiText)) return;
+        if (empty($kode)) return null;
+        $kode = trim($kode);
 
-        $normalized = str_replace([',', ';', '/'], ' ', strtolower($disposisiText));
-        $words = preg_split('/\s+/', $normalized);
+        $bidang = \App\Models\Bidang::where('kode_bidang', $kode)->first();
+        if ($bidang) return $bidang->id;
 
-        $bidangIds = [];
-        foreach ($words as $word) {
-            $word = trim($word);
-            if (empty($word)) continue;
+        $bidang = \App\Models\Bidang::where('nama_bidang', 'like', "%{$kode}%")->first();
+        if ($bidang) return $bidang->id;
 
-            $bidang = Bidang::where('kode_bidang', 'like', $word)
-                ->orWhere('nama_bidang', 'like', "%{$word}%")
-                ->first();
+        return null;
+    }
 
-            if ($bidang) {
-                $bidangIds[] = $bidang->id;
+    protected function getString(array $row, array $keys): ?string
+    {
+        foreach ($keys as $key) {
+            if (isset($row[$key]) && $row[$key] !== '') {
+                return trim((string)$row[$key]);
             }
         }
-
-        $bidang = Bidang::where('nama_bidang', 'like', "%{$disposisiText}%")->first();
-        if ($bidang) {
-            $bidangIds[] = $bidang->id;
-        }
-
-        $bidangIds = array_unique($bidangIds);
-        if (!empty($bidangIds)) {
-            $surat->bidangs()->sync($bidangIds);
-        }
+        return null;
     }
 }
