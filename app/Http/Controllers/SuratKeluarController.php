@@ -26,11 +26,58 @@ class SuratKeluarController extends Controller
         $tahun = $request->input('tahun', date('Y'));
 
         $query = $this->buildFilterQuery($request, $jenisSurat, $tahun);
-        $suratKeluars = $query->paginate(15)->withQueryString();
+        $suratKeluars = $query->paginate(20)->withQueryString();
 
         $tahunList = TahunArsip::orderByDesc('tahun')->pluck('tahun');
+        $statusList = ['draft', 'dikirim', 'selesai'];
+        $jenisSuratList = ['SPT', 'SPPD', 'SK', 'Undangan'];
+        $bidangList = \App\Models\Bidang::orderBy('nama_bidang')->get(['id', 'nama_bidang', 'kode_bidang']);
+        $klasifikasiList = \App\Models\KlasifikasiArsip::whereNull('parent_id')->orderBy('kode')->get(['id', 'kode', 'nama']);
 
-        return view('surat-keluar.index', compact('suratKeluars', 'jenisSurat', 'tahun', 'tahunList'));
+        return view('surat-keluar.index', compact(
+            'suratKeluars',
+            'jenisSurat',
+            'tahun',
+            'tahunList',
+            'statusList',
+            'jenisSuratList',
+            'bidangList',
+            'klasifikasiList'
+        ));
+    }
+
+    public function search(Request $request)
+    {
+        $this->authorize('viewAny', SuratKeluar::class);
+
+        $jenisSurat = $request->input('jenis_surat', 'SPT');
+        $tahun = $request->input('tahun', date('Y'));
+
+        $query = $this->buildFilterQuery($request, $jenisSurat, $tahun);
+
+        // For AJAX search, limit to 50 results
+        $suratKeluars = $query->limit(50)->get(['id', 'no_agenda', 'no_surat', 'tanggal_surat', 'tanggal_terima', 'tujuan', 'perihal', 'penandatangan', 'status', 'tahun', 'jenis_surat']);
+
+        return response()->json([
+            'data' => $suratKeluars->map(function ($surat) {
+                return [
+                    'id' => $surat->id,
+                    'no_agenda' => $surat->no_agenda,
+                    'no_surat' => $surat->no_surat,
+                    'tanggal_surat' => $surat->tanggal_surat?->format('d/m/Y'),
+                    'tanggal_terima' => $surat->tanggal_terima?->format('d/m/Y'),
+                    'tujuan' => $surat->tujuan,
+                    'perihal' => $surat->perihal,
+                    'penandatangan' => $surat->penandatangan,
+                    'status' => $surat->status,
+                    'tahun' => $surat->tahun,
+                    'jenis_surat' => $surat->jenis_surat,
+                    'url_show' => route('surat-keluar.show', $surat->id),
+                    'url_edit' => route('surat-keluar.edit', $surat->id),
+                ];
+            }),
+            'total' => $query->count(),
+        ]);
     }
 
     public function create(Request $request)
@@ -231,12 +278,17 @@ class SuratKeluarController extends Controller
                 $q->where('no_surat', 'like', "%{$search}%")
                   ->orWhere('no_agenda', 'like', "%{$search}%")
                   ->orWhere('tujuan', 'like', "%{$search}%")
-                  ->orWhere('perihal', 'like', "%{$search}%");
+                  ->orWhere('perihal', 'like', "%{$search}%")
+                  ->orWhere('penandatangan', 'like', "%{$search}%");
             });
         }
 
         if ($request->filled('status')) {
             $query->where('status', $request->status);
+        }
+
+        if ($request->filled('jenis_surat_filter')) {
+            $query->where('jenis_surat', $request->jenis_surat_filter);
         }
 
         if ($request->filled('bidang_id')) {
