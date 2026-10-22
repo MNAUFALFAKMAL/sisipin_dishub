@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\SuratMasukExport;
+use App\Imports\SuratMasukImport;
 use PDF;
 
 class SuratMasukController extends Controller
@@ -256,17 +257,30 @@ class SuratMasukController extends Controller
             'file_excel' => 'required|mimes:xlsx|max:10240',
             'jenis_surat' => 'nullable|string',
             'tahun' => 'nullable|integer|min:2020|max:2030',
+            'skip_header' => 'nullable|boolean',
         ]);
 
         $jenisSurat = $request->input('jenis_surat', 'Surat Masuk');
         $tahun = $request->filled('tahun') ? (int) $request->tahun : null;
+        $skipHeader = $request->boolean('skip_header', true);
 
         try {
-            Excel::import(new \App\Imports\SuratMasukImport($jenisSurat, $tahun), $request->file('file_excel'));
+            $import = new SuratMasukImport($jenisSurat, $tahun);
+            Excel::import($import, $request->file('file_excel'));
+
+            $success = $import->getSuccessCount();
+            $errors = $import->getErrorCount();
+            $total = $import->getRowCount();
+            $errorsList = $import->getErrors();
+
+            $message = "Import selesai. Berhasil: {$success}, Gagal: {$errors} dari {$total} baris.";
+            if ($errors > 0) {
+                $message .= " Detail error: " . implode('; ', array_map(fn($e) => "Baris {$e['row']}: {$e['error']}", $errorsList));
+            }
 
             return redirect()
                 ->route('surat-masuk.index', ['jenis_surat' => $jenisSurat])
-                ->with('success', 'Data ' . $jenisSurat . ' berhasil diimpor.');
+                ->with($errors > 0 ? 'warning' : 'success', $message);
         } catch (\Exception $e) {
             return redirect()
                 ->route('surat-masuk.index', ['jenis_surat' => $jenisSurat])
