@@ -28,7 +28,6 @@ return new class extends Migration
             $table->index(['no_surat', 'tahun'], 'idx_surat_keluar_nomor_tahun');
             $table->index('perihal', 'idx_surat_keluar_perihal');
             $table->index('tujuan', 'idx_surat_keluar_tujuan');
-            $table->index('penandatangan', 'idx_surat_keluar_penandatangan');
             $table->index(['tahun', 'status'], 'idx_surat_keluar_tahun_status');
             $table->index(['tahun', 'jenis_surat'], 'idx_surat_keluar_tahun_jenis');
             $table->index(['tahun', 'bidang_id'], 'idx_surat_keluar_tahun_bidang');
@@ -56,7 +55,6 @@ return new class extends Migration
             $table->dropIndex('idx_surat_keluar_nomor_tahun');
             $table->dropIndex('idx_surat_keluar_perihal');
             $table->dropIndex('idx_surat_keluar_tujuan');
-            $table->dropIndex('idx_surat_keluar_penandatangan');
             $table->dropIndex('idx_surat_keluar_tahun_status');
             $table->dropIndex('idx_surat_keluar_tahun_jenis');
             $table->dropIndex('idx_surat_keluar_tahun_bidang');
