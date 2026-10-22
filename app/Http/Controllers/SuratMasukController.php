@@ -171,34 +171,11 @@ class SuratMasukController extends Controller
             ->with('success', $jenis . ' berhasil dihapus.');
     }
 
-    public function disposisi(Request $request, SuratMasuk $suratMasuk)
+    public function disposisi(SuratMasuk $suratMasuk)
     {
         $this->authorize('disposisi', $suratMasuk);
 
-        $request->validate([
-            'kepada_user_id'   => ['nullable', 'exists:users,id'],
-            'kepada_bidang_id' => ['nullable', 'exists:bidangs,id'],
-            'instruksi'        => ['required', 'string', 'max:1000'],
-            'catatan'          => ['nullable', 'string', 'max:1000'],
-        ]);
-
-        $disposisi = \App\Models\Disposisi::create([
-            'surat_masuk_id'   => $suratMasuk->id,
-            'dari_user_id'     => Auth::id(),
-            'kepada_user_id'   => $request->kepada_user_id,
-            'kepada_bidang_id' => $request->kepada_bidang_id,
-            'instruksi'        => $request->instruksi,
-            'catatan'          => $request->catatan,
-            'status'           => 'baru',
-            'tanggal_disposisi'=> now(),
-        ]);
-
-        // Update status disposisi on surat masuk
-        $suratMasuk->update(['status_disposisi' => 'diproses']);
-
-        return redirect()
-            ->route('surat-masuk.show', $suratMasuk)
-            ->with('success', 'Disposisi berhasil dibuat.');
+        return redirect()->route('disposisi.create', ['surat_masuk_id' => $suratMasuk->id]);
     }
 
     public function exportExcel(Request $request)

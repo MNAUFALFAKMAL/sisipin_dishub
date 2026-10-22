@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Carbon\Carbon;
 
 class Disposisi extends Model
 {
@@ -18,8 +19,11 @@ class Disposisi extends Model
         'kepada_user_id',
         'kepada_bidang_id',
         'instruksi',
+        'prioritas',
+        'sifat',
         'status',
         'catatan',
+        'batas_waktu',
         'tanggal_disposisi',
         'tanggal_baca',
         'tanggal_selesai',
@@ -29,6 +33,7 @@ class Disposisi extends Model
         'tanggal_disposisi' => 'datetime',
         'tanggal_baca' => 'datetime',
         'tanggal_selesai' => 'datetime',
+        'batas_waktu' => 'datetime',
     ];
 
     // ── Relationships ──────────────────────────────────────────────────────
@@ -51,6 +56,72 @@ class Disposisi extends Model
     public function kepadaBidang(): BelongsTo
     {
         return $this->belongsTo(Bidang::class, 'kepada_bidang_id');
+    }
+
+    // ── Accessors ─────────────────────────────────────────────────────
+
+    public function getStatusLabelAttribute(): string
+    {
+        return match ($this->status) {
+            'baru' => 'Baru',
+            'dibaca' => 'Dibaca',
+            'diproses' => 'Diproses',
+            'selesai' => 'Selesai',
+            'ditolak' => 'Ditolak',
+            default => ucfirst($this->status),
+        };
+    }
+
+    public function getPrioritasLabelAttribute(): string
+    {
+        return match ($this->prioritas) {
+            'biasa' => 'Biasa',
+            'segera' => 'Segera',
+            'mendesak' => 'Mendesak',
+            default => ucfirst($this->prioritas),
+        };
+    }
+
+    public function getSifatLabelAttribute(): string
+    {
+        return match ($this->sifat) {
+            'biasa' => 'Biasa',
+            'rahasia' => 'Rahasia',
+            'terbatas' => 'Terbatas',
+            default => ucfirst($this->sifat),
+        };
+    }
+
+    public function getIsOverdueAttribute(): bool
+    {
+        if (!$this->batas_waktu) {
+            return false;
+        }
+        return $this->status !== 'selesai' && Carbon::parse($this->batas_waktu)->isPast();
+    }
+
+    public function getProgressPercentageAttribute(): int
+    {
+        return match ($this->status) {
+            'baru' => 0,
+            'dibaca' => 25,
+            'diproses' => 50,
+            'selesai' => 100,
+            'ditolak' => 100,
+            default => 0,
+        };
+    }
+
+    public function getRemainingTimeAttribute(): ?string
+    {
+        if (!$this->batas_waktu) {
+            return null;
+        }
+        if ($this->status === 'selesai' || $this->status === 'ditolak') {
+            return 'Selesai';
+        }
+        $diff = now()->diffForHumans(Carbon::parse($this->batas_waktu), true);
+        return Carbon::parse($this->batas_waktu)->isPast() ? "Terlambat {$diff}" : "Tersisa {$diff}";
     }
 
     // ── Helper Methods ─────────────────────────────────────────────────────
