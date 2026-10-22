@@ -160,10 +160,12 @@ Route::middleware(['auth'])->group(function () {
     Route::post('surat-masuk/import/excel', [SuratMasukController::class, 'importExcel'])->name('surat-masuk.import.excel');
     Route::resource('surat-masuk', SuratMasukController::class);
     Route::post('surat-masuk/{surat_masuk}/disposisi', [SuratMasukController::class, 'disposisi'])->name('surat-masuk.disposisi');
+    Route::get('surat-masuk/search', [SuratMasukController::class, 'search'])->name('surat-masuk.search');
     Route::resource('disposisi', DisposisiController::class);
     Route::post('disposisi/{disposisi}/proses', [DisposisiController::class, 'proses'])->name('disposisi.proses');
- 
+  
     Route::get('surat-keluar/export/template', [SuratKeluarController::class, 'downloadTemplate'])->name('surat-keluar.export.template');
+    Route::get('surat-keluar/search', [SuratKeluarController::class, 'search'])->name('surat-keluar.search');
     Route::get('surat-keluar/export/excel', [SuratKeluarController::class, 'exportExcel'])->name('surat-keluar.export.excel');
     Route::get('surat-keluar/export/pdf', [SuratKeluarController::class, 'exportPdf'])->name('surat-keluar.export.pdf');
     Route::post('surat-keluar/import/excel', [SuratKeluarController::class, 'importExcel'])->name('surat-keluar.import.excel');
