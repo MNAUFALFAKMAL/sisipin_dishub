@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\SuratKeluarExport;
+use PDF;
 
 class SuratKeluarController extends Controller
 {
@@ -336,5 +337,16 @@ class SuratKeluarController extends Controller
         }
 
         return $paths;
+    }
+
+    public function exportPdf(SuratKeluar $suratKeluar)
+    {
+        $this->authorize('view', $suratKeluar);
+
+        $suratKeluar->load(['klasifikasi', 'bidang', 'dibuatOleh']);
+
+        $pdf = PDF::loadView('surat-keluar.pdf', compact('suratKeluar'));
+
+        return $pdf->download('Surat_Keluar_' . $suratKeluar->jenis_surat . '_' . $suratKeluar->no_agenda . '_' . $suratKeluar->tahun . '.pdf');
     }
 }

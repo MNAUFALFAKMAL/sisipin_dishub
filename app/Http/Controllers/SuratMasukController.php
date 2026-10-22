@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\SuratMasukExport;
+use PDF;
 
 class SuratMasukController extends Controller
 {
@@ -339,5 +340,16 @@ class SuratMasukController extends Controller
         }
 
         return $paths;
+    }
+
+    public function exportPdf(SuratMasuk $suratMasuk)
+    {
+        $this->authorize('view', $suratMasuk);
+
+        $suratMasuk->load(['klasifikasi', 'bidangTujuan', 'bidangTujuans', 'diinputOleh', 'disposisis.dariUser', 'disposisis.kepadaUser', 'disposisis.kepadaBidang']);
+
+        $pdf = PDF::loadView('surat-masuk.pdf', compact('suratMasuk'));
+
+        return $pdf->download('Surat_Masuk_' . $suratMasuk->no_agenda . '_' . $suratMasuk->tahun . '.pdf');
     }
 }
