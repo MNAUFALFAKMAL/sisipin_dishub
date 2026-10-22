@@ -8,7 +8,9 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Gate;
 use App\Models\User;
+use App\Models\SuratMasuk;
 use App\Policies\UserPolicy;
+use App\Policies\SuratMasukPolicy;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -29,6 +31,7 @@ class AppServiceProvider extends ServiceProvider
 
         // Register policies
         Gate::policy(User::class, UserPolicy::class);
+        Gate::policy(SuratMasuk::class, SuratMasukPolicy::class);
 
         // Daftar tahun untuk dropdown navigasi sidebar (Surat Menyurat → Tahun)
         View::composer('layouts.sidebar', function ($view) {

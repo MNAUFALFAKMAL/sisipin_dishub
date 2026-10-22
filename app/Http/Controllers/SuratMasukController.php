@@ -2,249 +2,230 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\JenisSurat;
-use App\Enums\StatusDisposisi;
-use App\Exports\SuratMasukExport;
-use App\Imports\SuratMasukImport;
 use App\Models\Bidang;
+use App\Models\KlasifikasiArsip;
 use App\Models\SuratMasuk;
-use App\Services\SuratMasukService;
-use App\Services\SuratService;
-use App\Traits\MergesPdfChunks;
+use App\Models\TahunArsip;
+use App\Http\Requests\StoreSuratMasukRequest;
+use App\Http\Requests\UpdateSuratMasukRequest;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\SuratMasukExport;
 
 class SuratMasukController extends Controller
 {
-    use MergesPdfChunks;
-
-    protected $service;
-
-    public function __construct(SuratMasukService $service)
-    {
-        $this->service = $service;
-    }
-
     public function index(Request $request)
     {
-        if (! $request->has('jenis_surat')) {
-            return redirect()->route('surat-masuk.index', array_merge($request->query(), ['jenis_surat' => JenisSurat::SURAT_MASUK->value]));
-        }
-        if (! $request->has('tahun')) {
-            return redirect()->route('surat-masuk.index', array_merge($request->query(), ['tahun' => date('Y')]));
-        }
-        $query = $this->buildFilterQuery($request);
-        $suratMasuks = $query->paginate(10);
+        $this->authorize('viewAny', SuratMasuk::class);
 
-        return view('surat-masuk.index', compact('suratMasuks'));
+        $jenisSurat = $request->input('jenis_surat', 'Surat Masuk');
+        $tahun = $request->input('tahun', date('Y'));
+
+        $query = $this->buildFilterQuery($request, $jenisSurat, $tahun);
+        $suratMasuks = $query->paginate(15)->withQueryString();
+
+        $tahunList = TahunArsip::orderByDesc('tahun')->pluck('tahun');
+
+        return view('surat-masuk.index', compact('suratMasuks', 'jenisSurat', 'tahun', 'tahunList'));
     }
 
     public function create(Request $request)
     {
-        $bidangs = Bidang::all();
-        $jenisSurat = $request->input('jenis_surat_active') ?: JenisSurat::SURAT_MASUK->value;
-        $tahun = $request->filled('tahun') ? (int) $request->tahun : (int) date('Y');
-        $suggestedNoAgenda = $this->service->getNextAgenda($jenisSurat, $tahun);
-        $tahunAktif = $tahun;
+        $this->authorize('create', SuratMasuk::class);
 
-        return view('surat-masuk.create', compact('bidangs', 'suggestedNoAgenda', 'tahunAktif'));
+        $jenisSurat = $request->input('jenis_surat', 'Surat Masuk');
+        $tahun = $request->input('tahun', date('Y'));
+
+        $bidangs = Bidang::orderBy('nama_bidang')->get();
+        $klasifikasiList = KlasifikasiArsip::orderBy('kode')->get(['id', 'kode', 'nama']);
+        $suggestedNoAgenda = $this->getNextAgenda($jenisSurat, $tahun);
+
+        return view('surat-masuk.create', compact(
+            'bidangs',
+            'klasifikasiList',
+            'suggestedNoAgenda',
+            'jenisSurat',
+            'tahun'
+        ));
     }
 
-    public function store(Request $request)
+    public function store(StoreSuratMasukRequest $request)
     {
-        $request->validate([
-            'jenis_surat' => ['required', 'string', JenisSurat::validationRules()],
-            'no_agenda' => 'nullable|string|max:50',
-            'no_surat' => 'nullable|string|max:100',
-            'tanggal_surat' => 'nullable|date',
-            'tanggal_terima' => 'nullable|date',
-            'pengirim' => 'nullable|string|max:150',
-            'perihal' => 'nullable|string|max:255',
-            'file_surat' => 'nullable|array|max:10',
-            'file_surat.*' => 'file|mimes:pdf,jpg,jpeg,png,webp,gif|mimetypes:application/pdf,image/jpeg,image/png,image/webp,image/gif|max:5120',
-            'bidang_tujuan_ids' => 'nullable|array',
-            'bidang_tujuan_ids.*' => 'exists:bidangs,id',
-            'klasifikasi_id' => 'nullable|exists:klasifikasi_arsips,id',
+        $this->authorize('create', SuratMasuk::class);
+
+        $filePaths = $this->handleFileUpload($request, 'surat-masuk');
+
+        $suratMasuk = SuratMasuk::create([
+            'no_agenda'       => $request->no_agenda,
+            'tahun'           => $request->tahun,
+            'jenis_surat'     => $request->jenis_surat,
+            'no_surat'        => $request->no_surat,
+            'tanggal_surat'   => $request->tanggal_surat,
+            'tanggal_terima'  => $request->tanggal_terima,
+            'pengirim'        => $request->pengirim,
+            'perihal'         => $request->perihal,
+            'isi_ringkas'     => $request->isi_ringkas,
+            'klasifikasi_id'  => $request->klasifikasi_id,
+            'bidang_tujuan_id'=> $request->bidang_tujuan_id,
+            'file_surat'      => $filePaths,
+            'diinput_oleh'    => Auth::id(),
+            'keterangan'      => $request->keterangan,
+            'status_disposisi'=> 'belum',
         ]);
 
-        try {
-            $suratMasuk = $this->service->store($request);
-
-            return redirect()
-                ->route('surat-masuk.index', $this->indexRedirectParams($request, $suratMasuk->jenis_surat))
-                ->with('success', $suratMasuk->jenis_surat.' berhasil ditambahkan.');
-        } catch (\RuntimeException $e) {
-            return redirect()->back()->withInput()->withErrors(['no_agenda' => $e->getMessage()]);
+        // Handle bidang tujuan multiple (pivot table)
+        if ($request->filled('bidang_tujuan_ids')) {
+            $suratMasuk->bidangTujuans()->sync($request->bidang_tujuan_ids);
         }
+
+        return redirect()
+            ->route('surat-masuk.index', ['jenis_surat' => $request->jenis_surat, 'tahun' => $request->tahun])
+            ->with('success', $request->jenis_surat . ' berhasil ditambahkan.');
     }
 
     public function show(SuratMasuk $suratMasuk)
     {
-        $suratMasuk->load(['bidangTujuan', 'diinputOleh']);
+        $this->authorize('view', $suratMasuk);
+
+        $suratMasuk->load(['klasifikasi', 'bidangTujuan', 'bidangTujuans', 'diinputOleh', 'disposisis.dariUser', 'disposisis.kepadaUser', 'disposisis.kepadaBidang']);
 
         return view('surat-masuk.show', compact('suratMasuk'));
     }
 
     public function edit(SuratMasuk $suratMasuk)
     {
-        $bidangs = Bidang::all();
+        $this->authorize('update', $suratMasuk);
 
-        return view('surat-masuk.edit', compact('suratMasuk', 'bidangs'));
+        $bidangs = Bidang::orderBy('nama_bidang')->get();
+        $klasifikasiList = KlasifikasiArsip::orderBy('kode')->get(['id', 'kode', 'nama']);
+
+        return view('surat-masuk.edit', compact('suratMasuk', 'bidangs', 'klasifikasiList'));
     }
 
-    public function update(Request $request, SuratMasuk $suratMasuk)
+    public function update(UpdateSuratMasukRequest $request, SuratMasuk $suratMasuk)
     {
-        $request->validate([
-            'jenis_surat' => ['required', 'string', JenisSurat::validationRules()],
-            'no_agenda' => 'nullable|string|max:50',
-            'no_surat' => 'nullable|string|max:100',
-            'tanggal_surat' => 'nullable|date',
-            'tanggal_terima' => 'nullable|date',
-            'pengirim' => 'nullable|string|max:150',
-            'perihal' => 'nullable|string|max:255',
-            'file_surat' => 'nullable|array|max:10',
-            'file_surat.*' => 'file|mimes:pdf,jpg,jpeg,png,webp,gif|mimetypes:application/pdf,image/jpeg,image/png,image/webp,image/gif|max:5120',
-            'bidang_tujuan_ids' => 'nullable|array',
-            'bidang_tujuan_ids.*' => 'exists:bidangs,id',
-            'klasifikasi_id' => 'nullable|exists:klasifikasi_arsips,id',
-            'status_disposisi' => ['required', StatusDisposisi::validationRules()],
+        $this->authorize('update', $suratMasuk);
+
+        $filePaths = $suratMasuk->file_surat; // Keep existing files
+
+        // Handle file deletions
+        if ($request->filled('hapus_file')) {
+            foreach ($request->hapus_file as $path) {
+                if (in_array($path, $filePaths)) {
+                    Storage::disk('public')->delete($path);
+                    $filePaths = array_values(array_filter($filePaths, fn($p) => $p !== $path));
+                }
+            }
+        }
+
+        // Handle new file uploads
+        $newFiles = $this->handleFileUpload($request, 'surat-masuk');
+        $filePaths = array_merge($filePaths, $newFiles);
+
+        $suratMasuk->update([
+            'no_agenda'       => $request->no_agenda,
+            'tahun'           => $request->tahun,
+            'jenis_surat'     => $request->jenis_surat,
+            'no_surat'        => $request->no_surat,
+            'tanggal_surat'   => $request->tanggal_surat,
+            'tanggal_terima'  => $request->tanggal_terima,
+            'pengirim'        => $request->pengirim,
+            'perihal'         => $request->perihal,
+            'isi_ringkas'     => $request->isi_ringkas,
+            'klasifikasi_id'  => $request->klasifikasi_id,
+            'bidang_tujuan_id'=> $request->bidang_tujuan_id,
+            'file_surat'      => $filePaths,
+            'keterangan'      => $request->keterangan,
         ]);
 
-        try {
-            $this->service->update($request, $suratMasuk);
-
-            return redirect()
-                ->route('surat-masuk.index', $this->indexRedirectParams($request, $suratMasuk->jenis_surat))
-                ->with('success', $suratMasuk->jenis_surat.' berhasil diperbarui.');
-        } catch (\RuntimeException $e) {
-            return redirect()->back()->withInput()->withErrors(['no_agenda' => $e->getMessage()]);
+        // Handle bidang tujuan multiple (pivot table)
+        if ($request->filled('bidang_tujuan_ids')) {
+            $suratMasuk->bidangTujuans()->sync($request->bidang_tujuan_ids);
+        } else {
+            $suratMasuk->bidangTujuans()->detach();
         }
+
+        return redirect()
+            ->route('surat-masuk.index', ['jenis_surat' => $request->jenis_surat, 'tahun' => $request->tahun])
+            ->with('success', $request->jenis_surat . ' berhasil diperbarui.');
     }
 
-    public function destroy(Request $request, SuratMasuk $suratMasuk)
+    public function destroy(SuratMasuk $suratMasuk)
     {
+        $this->authorize('delete', $suratMasuk);
+
+        // Delete files
         foreach ($suratMasuk->file_surat as $path) {
             Storage::disk('public')->delete($path);
         }
+
         $jenis = $suratMasuk->jenis_surat;
+        $tahun = $suratMasuk->tahun;
         $suratMasuk->delete();
 
         return redirect()
-            ->route('surat-masuk.index', $this->indexRedirectParams($request, $jenis))
-            ->with('success', $jenis.' berhasil dihapus.');
+            ->route('surat-masuk.index', ['jenis_surat' => $jenis, 'tahun' => $tahun])
+            ->with('success', $jenis . ' berhasil dihapus.');
     }
 
-    private function indexRedirectParams(Request $request, string $jenis): array
+    public function disposisi(Request $request, SuratMasuk $suratMasuk)
     {
-        $params = ['jenis_surat' => $jenis];
-        if ($request->filled('tahun')) {
-            $params['tahun'] = (int) $request->tahun;
-        }
+        $this->authorize('disposisi', $suratMasuk);
 
-        return $params;
+        $request->validate([
+            'kepada_user_id'   => ['nullable', 'exists:users,id'],
+            'kepada_bidang_id' => ['nullable', 'exists:bidangs,id'],
+            'instruksi'        => ['required', 'string', 'max:1000'],
+            'catatan'          => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        $disposisi = \App\Models\Disposisi::create([
+            'surat_masuk_id'   => $suratMasuk->id,
+            'dari_user_id'     => Auth::id(),
+            'kepada_user_id'   => $request->kepada_user_id,
+            'kepada_bidang_id' => $request->kepada_bidang_id,
+            'instruksi'        => $request->instruksi,
+            'catatan'          => $request->catatan,
+            'status'           => 'baru',
+            'tanggal_disposisi'=> now(),
+        ]);
+
+        // Update status disposisi on surat masuk
+        $suratMasuk->update(['status_disposisi' => 'diproses']);
+
+        return redirect()
+            ->route('surat-masuk.show', $suratMasuk)
+            ->with('success', 'Disposisi berhasil dibuat.');
     }
 
     public function exportExcel(Request $request)
     {
-        $jenis = $request->input('jenis_surat') ?: JenisSurat::SURAT_MASUK->value;
+        $jenisSurat = $request->input('jenis_surat', 'Surat Masuk');
+        $tahun = $request->input('tahun', date('Y'));
+
+        $query = $this->buildFilterQuery($request, $jenisSurat, $tahun);
         $data = collect();
-        $this->buildFilterQuery($request)->chunk(500, function ($chunk) use (&$data) {
-            $chunk->loadMissing('bidangTujuan');
+        $query->chunk(500, function ($chunk) use (&$data) {
+            $chunk->loadMissing('bidangTujuan', 'klasifikasi');
             foreach ($chunk as $row) {
                 $data->push($row);
             }
         });
-        $periodeStr = SuratService::getPeriodeString($request->start_date, $request->end_date);
-        $filename = $jenis.($periodeStr ? ' '.$periodeStr : '').'.xlsx';
+
+        $filename = $jenisSurat . '_' . $tahun . '.xlsx';
 
         return Excel::download(new SuratMasukExport($data), $filename);
     }
 
-    public function exportPdf(Request $request)
+    public function downloadTemplate()
     {
-        $jenis = $request->input('jenis_surat') ?: JenisSurat::SURAT_MASUK->value;
-        $title = 'Laporan Data '.$jenis;
-        $periodeStr = SuratService::getPeriodeString($request->start_date, $request->end_date);
-        $filename = $jenis.($periodeStr ? ' '.$periodeStr : '').'.pdf';
-
-        ini_set('memory_limit', '512M');
-        set_time_limit(300);
-
-        $htmlSegments = [];
-        $query = $this->buildFilterQuery($request);
-        $isFirstChunk = true;
-        $query->chunk(150, function ($chunk) use (&$htmlSegments, $title, &$isFirstChunk) {
-            $chunk->loadMissing('bidangTujuans');
-            $htmlSegments[] = view('surat-masuk.pdf', [
-                'suratMasuks' => $chunk,
-                'title' => $title,
-                'showHeader' => $isFirstChunk,
-            ])->render();
-            $isFirstChunk = false;
-            unset($chunk);
-        });
-
-        return $this->downloadMergedPdf($filename, $htmlSegments);
-    }
-
-    private function buildFilterQuery(Request $request)
-    {
-        $query = SuratMasuk::with(['bidangTujuan', 'klasifikasi']);
-
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function ($q) use ($search) {
-                $q->where('no_surat', 'like', "%{$search}%")
-                    ->orWhere('no_agenda', 'like', "%{$search}%")
-                    ->orWhere('pengirim', 'like', "%{$search}%")
-                    ->orWhere('perihal', 'like', "%{$search}%");
-            });
-        }
-
-        if ($request->filled('status')) {
-            $query->where('status_disposisi', $request->status);
-        }
-
-        if ($request->filled('jenis_surat')) {
-            $query->where('jenis_surat', $request->jenis_surat);
-        }
-
-        if ($request->filled('tahun')) {
-            $tahun = (int) $request->tahun;
-            $query->where('tahun', $tahun);
-        }
-
-        if ($request->filled('filter_type') && $request->filter_type !== 'semua') {
-            $type = $request->filter_type;
-            if ($type === 'bulan') {
-                $month = str_pad($request->filter_bulan, 2, '0', STR_PAD_LEFT);
-                $year = $request->filter_tahun;
-                if ($month && $year) {
-                    $start = "{$year}-{$month}-01";
-                    $end = date('Y-m-t', strtotime($start));
-                    $query->whereBetween('tanggal_terima', [$start, $end]);
-                    $request->merge(['start_date' => $start, 'end_date' => $end]);
-                }
-            } elseif ($type === 'tahun') {
-                $year = $request->filter_tahun_only;
-                if ($year) {
-                    $start = "{$year}-01-01";
-                    $end = "{$year}-12-31";
-                    $query->whereBetween('tanggal_terima', [$start, $end]);
-                    $request->merge(['start_date' => $start, 'end_date' => $end]);
-                }
-            } elseif ($type === 'rentang') {
-                if ($request->filled('filter_start_date') && $request->filled('filter_end_date')) {
-                    $query->whereBetween('tanggal_terima', [$request->filter_start_date, $request->filter_end_date]);
-                    $request->merge(['start_date' => $request->filter_start_date, 'end_date' => $request->filter_end_date]);
-                }
-            }
-        } elseif ($request->filled('start_date') && $request->filled('end_date')) {
-            $query->whereBetween('tanggal_terima', [$request->start_date, $request->end_date]);
-        }
-
-        return $query->orderByRaw('CAST(no_agenda AS UNSIGNED) DESC, no_agenda DESC');
+        return Excel::download(
+            new SuratMasukExport(collect(), 'Template Surat Masuk'),
+            'Template_Import_Surat_Masuk.xlsx'
+        );
     }
 
     public function importExcel(Request $request)
@@ -255,27 +236,86 @@ class SuratMasukController extends Controller
             'tahun' => 'nullable|integer|min:2020|max:2030',
         ]);
 
-        $jenisSurat = $request->input('jenis_surat') ?: JenisSurat::SURAT_MASUK->value;
+        $jenisSurat = $request->input('jenis_surat', 'Surat Masuk');
         $tahun = $request->filled('tahun') ? (int) $request->tahun : null;
 
         try {
-            Excel::import(new SuratMasukImport($jenisSurat, $tahun), $request->file('file_excel'));
+            Excel::import(new \App\Imports\SuratMasukImport($jenisSurat, $tahun), $request->file('file_excel'));
 
             return redirect()
                 ->route('surat-masuk.index', ['jenis_surat' => $jenisSurat])
-                ->with('success', 'Data '.$jenisSurat.' berhasil diimpor.');
+                ->with('success', 'Data ' . $jenisSurat . ' berhasil diimpor.');
         } catch (\Exception $e) {
             return redirect()
                 ->route('surat-masuk.index', ['jenis_surat' => $jenisSurat])
-                ->with('error', 'Gagal mengimpor data. Pastikan format sesuai template. Error: '.$e->getMessage());
+                ->with('error', 'Gagal mengimpor data. Pastikan format sesuai template. Error: ' . $e->getMessage());
         }
     }
 
-    public function downloadTemplate()
+    private function buildFilterQuery(Request $request, string $jenisSurat, string $tahun)
     {
-        return Excel::download(
-            new SuratMasukExport(collect(), 'Template Surat Masuk'),
-            'Template_Import_Surat_Masuk.xlsx'
-        );
+        $query = SuratMasuk::with(['klasifikasi', 'bidangTujuan', 'bidangTujuans', 'diinputOleh'])
+            ->where('jenis_surat', $jenisSurat)
+            ->where('tahun', $tahun);
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('no_surat', 'like', "%{$search}%")
+                  ->orWhere('no_agenda', 'like', "%{$search}%")
+                  ->orWhere('pengirim', 'like', "%{$search}%")
+                  ->orWhere('perihal', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status_disposisi', $request->status);
+        }
+
+        if ($request->filled('bidang_id')) {
+            $query->where('bidang_tujuan_id', $request->bidang_id);
+        }
+
+        if ($request->filled('klasifikasi_id')) {
+            $query->where('klasifikasi_id', $request->klasifikasi_id);
+        }
+
+        if ($request->filled('start_date') && $request->filled('end_date')) {
+            $query->whereBetween('tanggal_terima', [$request->start_date, $request->end_date]);
+        }
+
+        return $query->orderByRaw('CAST(no_agenda AS UNSIGNED) DESC, no_agenda DESC');
+    }
+
+    private function getNextAgenda(string $jenisSurat, int $tahun): int
+    {
+        $last = SuratMasuk::where('jenis_surat', $jenisSurat)
+            ->where('tahun', $tahun)
+            ->whereNotNull('no_agenda')
+            ->orderByRaw('CAST(no_agenda AS UNSIGNED) DESC')
+            ->value('no_agenda');
+
+        return $last ? (int) $last + 1 : 1;
+    }
+
+    private function handleFileUpload(Request $request, string $folder): array
+    {
+        if (!$request->hasFile('file_surat')) {
+            return [];
+        }
+
+        $files = $request->file('file_surat');
+        $paths = [];
+        $year = $request->input('tahun', date('Y'));
+
+        foreach ($files as $file) {
+            $hash = Str::random(40);
+            $ext = $file->getClientOriginalExtension();
+            $filename = $hash . '.' . $ext;
+            $path = $file->storeAs("private/{$folder}/{$year}", $filename, 'public');
+            $paths[] = $path;
+        }
+
+        return $paths;
     }
 }
