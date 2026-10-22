@@ -8,7 +8,7 @@ on:
 
 jobs:
   test:
-    name: Test (PHP 8.4)
+    name: Test (PHP 8.5)
     runs-on: ubuntu-latest
 
     services:
