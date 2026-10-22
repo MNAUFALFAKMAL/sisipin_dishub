@@ -1,5 +1,7 @@
 ﻿@php
     $jenisSurat = request('jenis_surat', 'Surat Masuk');
+    $klasifikasiList = \App\Models\KlasifikasiArsip::orderBy('kode')->get(['id', 'kode', 'nama']);
+    $bidangList = \App\Models\Bidang::orderBy('nama_bidang')->get(['id', 'nama_bidang', 'kode_bidang']);
 @endphp
 @extends('layouts.app')
 @section('title', $jenisSurat . (request('tahun') ? ' ' . request('tahun') : ''))
@@ -31,7 +33,7 @@
 
     {{-- Filter & Search --}}
     <x-card>
-        <form method="GET" action="{{ route('surat-masuk.index') }}" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+        <form method="GET" action="{{ route('surat-masuk.index') }}" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 items-end">
             @if(request()->has('jenis_surat'))
                 <input type="hidden" name="jenis_surat" value="{{ request('jenis_surat') }}" />
             @endif
@@ -39,7 +41,7 @@
                 <input type="hidden" name="tahun" value="{{ request('tahun') }}" />
             @endif
             
-            <div>
+            <div class="lg:col-span-2">
                 <label class="block text-xs font-semibold text-gray-500 dark:text-slate-400 mb-1.5 uppercase tracking-wider">Cari Kata Kunci</label>
                 <input type="text" name="search" value="{{ request('search') }}"
                        placeholder="Nomor, pengirim, perihal..."
@@ -57,12 +59,26 @@
             </div>
             
             <div>
-                <label class="block text-xs font-semibold text-gray-500 dark:text-slate-400 mb-1.5 uppercase tracking-wider">Tipe Periode</label>
-                <select name="filter_type" id="main_filter_type_masuk" class="form-select w-full py-2 text-sm" onchange="toggleMainFilterMasuk(this.value)">
-                    <option value="semua" {{ request('filter_type', 'semua') == 'semua' ? 'selected' : '' }}>Semua Waktu</option>
-                    <option value="bulan" {{ request('filter_type') == 'bulan' ? 'selected' : '' }}>Per Bulan</option>
-                    <option value="tahun" {{ request('filter_type') == 'tahun' ? 'selected' : '' }}>Per Tahun</option>
-                    <option value="rentang" {{ request('filter_type') == 'rentang' ? 'selected' : '' }}>Rentang Tanggal</option>
+                <label class="block text-xs font-semibold text-gray-500 dark:text-slate-400 mb-1.5 uppercase tracking-wider">Klasifikasi</label>
+                <select name="klasifikasi_id" class="form-select w-full py-2 text-sm">
+                    <option value="">Semua Klasifikasi</option>
+                    @foreach($klasifikasiList as $klasifikasi)
+                        <option value="{{ $klasifikasi->id }}" {{ request('klasifikasi_id') == $klasifikasi->id ? 'selected' : '' }}>
+                            {{ $klasifikasi->kode }} - {{ Str::limit($klasifikasi->nama, 30) }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold text-gray-500 dark:text-slate-400 mb-1.5 uppercase tracking-wider">Bidang Tujuan</label>
+                <select name="bidang_id" class="form-select w-full py-2 text-sm">
+                    <option value="">Semua Bidang</option>
+                    @foreach($bidangList as $bidang)
+                        <option value="{{ $bidang->id }}" {{ request('bidang_id') == $bidang->id ? 'selected' : '' }}>
+                            {{ $bidang->kode_bidang }} - {{ Str::limit($bidang->nama_bidang, 25) }}
+                        </option>
+                    @endforeach
                 </select>
             </div>
             
@@ -121,7 +137,7 @@
                     </svg>
                     Cari
                 </button>
-                @if(request()->hasAny(['search','status','filter_type','filter_bulan','filter_tahun','filter_tahun_only','filter_start_date','filter_end_date','start_date','end_date']))
+                @if(request()->hasAny(['search','status','klasifikasi_id','bidang_id','filter_type','filter_bulan','filter_tahun','filter_tahun_only','filter_start_date','filter_end_date','start_date','end_date']))
                 <x-button variant="secondary" href="{{ route('surat-masuk.index', ['jenis_surat' => request('jenis_surat'), 'tahun' => request('tahun')]) }}">Reset</x-button>
                 @endif
             </div>

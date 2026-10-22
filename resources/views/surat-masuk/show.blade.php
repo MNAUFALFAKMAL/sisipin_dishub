@@ -20,12 +20,24 @@
         <div class="flex items-center justify-between border-b pb-4">
             <h2 class="text-base font-bold text-gray-800">Informasi Detail {{ $jenisActive }}</h2>
             <div class="flex gap-2">
-                <x-button variant="secondary" href="{{ route('surat-masuk.edit', $suratMasuk->id, ['tahun' => $suratMasuk->tahun]) }}">
-                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                    </svg>
-                    Edit
-                </x-button>
+                @can('disposisi', $suratMasuk)
+                    <form action="{{ route('surat-masuk.disposisi', $suratMasuk) }}" method="GET">
+                        <x-button variant="primary" type="submit">
+                            <svg class="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                            </svg>
+                            Disposisikan
+                        </x-button>
+                    </form>
+                @endcan
+                @can('update', $suratMasuk)
+                    <x-button variant="secondary" href="{{ route('surat-masuk.edit', $suratMasuk->id, ['tahun' => $suratMasuk->tahun]) }}">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                        </svg>
+                        Edit
+                    </x-button>
+                @endcan
                 <x-button variant="secondary" href="{{ route('surat-masuk.index', ['jenis_surat' => $jenisActive, 'tahun' => $suratMasuk->tahun]) }}">← Kembali</x-button>
             </div>
         </div>

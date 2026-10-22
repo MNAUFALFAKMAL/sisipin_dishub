@@ -5,6 +5,8 @@ namespace Tests\Feature;
 use App\Models\SuratKeluar;
 use App\Models\SuratMasuk;
 use App\Models\User;
+use App\Models\KlasifikasiArsip;
+use App\Models\Bidang;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -14,11 +16,44 @@ class SuratFileUploadTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected User $user;
+    protected KlasifikasiArsip $klasifikasi;
+    protected Bidang $bidang;
+
     protected function setUp(): void
     {
         parent::setUp();
         // Create a user with tata_usaha role who can access surat-masuk/keluar
         $this->user = User::factory()->tataUsaha()->create();
+
+        // Create required related data
+        $this->klasifikasi = KlasifikasiArsip::factory()->create([
+            'kode' => '000.1',
+            'nama' => 'Test Klasifikasi',
+        ]);
+
+        $this->bidang = Bidang::factory()->create([
+            'nama_bidang' => 'Test Bidang',
+            'kode_bidang' => 'TB',
+        ]);
+    }
+
+    protected function getValidSuratMasukData(array $overrides = []): array
+    {
+        return array_merge([
+            'jenis_surat'     => 'Surat Masuk',
+            'tahun'           => date('Y'),
+            'no_agenda'       => '1',
+            'no_surat'        => '001/TEST/' . date('Y'),
+            'tanggal_surat'   => date('Y-m-d'),
+            'tanggal_terima'  => date('Y-m-d'),
+            'pengirim'        => 'Instansi Test',
+            'perihal'         => 'Perihal Test',
+            'isi_ringkas'     => 'Isi ringkas test',
+            'klasifikasi_id'  => $this->klasifikasi->id,
+            'bidang_tujuan_id'=> $this->bidang->id,
+            'keterangan'      => 'Keterangan test',
+        ], $overrides);
     }
 
     /**
@@ -30,19 +65,15 @@ class SuratFileUploadTest extends TestCase
 
         // Create surat masuk with 1 file (use image which converts to PDF)
         $file1 = UploadedFile::fake()->image('surat1.jpg', 100, 100);
-        $response = $this->actingAs($this->user)->post(route('surat-masuk.store'), [
-            'jenis_surat' => 'Surat Masuk',
+        $data = $this->getValidSuratMasukData([
             'no_agenda' => '1',
-            'tanggal_terima' => date('Y-m-d'),
-            'tanggal_surat' => date('Y-m-d'),
-            'pengirim' => 'Instansi A',
-            'perihal' => 'Perihal Test',
             'file_surat' => [$file1],
-            'bidang_tujuan_ids' => [],
+            'bidang_tujuan_ids' => [$this->bidang->id],
         ]);
+        
+        $response = $this->actingAs($this->user)->post(route('surat-masuk.store'), $data);
 
         $response->assertSessionHasNoErrors();
-
         $response->assertRedirect();
 
         $surat = SuratMasuk::where('no_agenda', '1')->first();
@@ -53,17 +84,15 @@ class SuratFileUploadTest extends TestCase
 
         // Update with another file
         $file2 = UploadedFile::fake()->image('surat2.jpg', 100, 100);
-        $response = $this->actingAs($this->user)->put(route('surat-masuk.update', $surat->id), [
-            'jenis_surat' => 'Surat Masuk',
+        $updateData = $this->getValidSuratMasukData([
             'no_agenda' => '1',
-            'tanggal_terima' => date('Y-m-d'),
-            'tanggal_surat' => date('Y-m-d'),
-            'pengirim' => 'Instansi A',
             'perihal' => 'Perihal Test Updated',
             'file_surat' => [$file2],
-            'bidang_tujuan_ids' => [],
+            'bidang_tujuan_ids' => [$this->bidang->id],
             'status_disposisi' => 'belum',
         ]);
+        
+        $response = $this->actingAs($this->user)->put(route('surat-masuk.update', $surat->id), $updateData);
         $response->assertRedirect();
 
         $surat->refresh();
@@ -83,31 +112,28 @@ class SuratFileUploadTest extends TestCase
         $file1 = UploadedFile::fake()->image('surat1.jpg', 100, 100);
         $file2 = UploadedFile::fake()->image('surat2.jpg', 120, 120);
 
-        $response = $this->actingAs($this->user)->post(route('surat-masuk.store'), [
-            'jenis_surat' => 'Surat Masuk',
+        $data = $this->getValidSuratMasukData([
             'no_agenda' => '2',
-            'tanggal_terima' => date('Y-m-d'),
-            'pengirim' => 'Instansi B',
-            'perihal' => 'Perihal Test 2',
             'file_surat' => [$file1],
-            'bidang_tujuan_ids' => [],
+            'bidang_tujuan_ids' => [$this->bidang->id],
         ]);
+        
+        $response = $this->actingAs($this->user)->post(route('surat-masuk.store'), $data);
         $response->assertRedirect();
 
         $surat = SuratMasuk::where('no_agenda', '2')->first();
         $firstPath = $surat->file_surat[0];
 
         // Add second file
-        $response = $this->actingAs($this->user)->put(route('surat-masuk.update', $surat->id), [
-            'jenis_surat' => 'Surat Masuk',
+        $updateData = $this->getValidSuratMasukData([
             'no_agenda' => '2',
-            'tanggal_terima' => date('Y-m-d'),
-            'pengirim' => 'Instansi B',
             'perihal' => 'Perihal Test 2 Updated',
             'file_surat' => [$file2],
-            'bidang_tujuan_ids' => [],
+            'bidang_tujuan_ids' => [$this->bidang->id],
             'status_disposisi' => 'belum',
         ]);
+        
+        $response = $this->actingAs($this->user)->put(route('surat-masuk.update', $surat->id), $updateData);
         $response->assertRedirect();
 
         $surat->refresh();
@@ -115,16 +141,14 @@ class SuratFileUploadTest extends TestCase
         $secondPath = $surat->file_surat[1];
 
         // Delete first file only
-        $response = $this->actingAs($this->user)->put(route('surat-masuk.update', $surat->id), [
-            'jenis_surat' => 'Surat Masuk',
+        $deleteData = $this->getValidSuratMasukData([
             'no_agenda' => '2',
-            'tanggal_terima' => date('Y-m-d'),
-            'pengirim' => 'Instansi B',
-            'perihal' => 'Perihal Test 2 Updated',
             'hapus_file' => [$firstPath],
-            'bidang_tujuan_ids' => [],
+            'bidang_tujuan_ids' => [$this->bidang->id],
             'status_disposisi' => 'belum',
         ]);
+        
+        $response = $this->actingAs($this->user)->put(route('surat-masuk.update', $surat->id), $deleteData);
         $response->assertRedirect();
 
         $surat->refresh();
@@ -144,47 +168,42 @@ class SuratFileUploadTest extends TestCase
         $file1 = UploadedFile::fake()->image('surat1.jpg', 100, 100);
         $file2 = UploadedFile::fake()->image('surat2.jpg', 120, 120);
 
-        $response = $this->actingAs($this->user)->post(route('surat-masuk.store'), [
-            'jenis_surat' => 'Surat Masuk',
+        $data = $this->getValidSuratMasukData([
             'no_agenda' => '3',
-            'tanggal_terima' => date('Y-m-d'),
-            'pengirim' => 'Instansi C',
-            'perihal' => 'Perihal Test 3',
             'file_surat' => [$file1],
-            'bidang_tujuan_ids' => [],
+            'bidang_tujuan_ids' => [$this->bidang->id],
         ]);
+        
+        $response = $this->actingAs($this->user)->post(route('surat-masuk.store'), $data);
         $response->assertRedirect();
 
         $surat = SuratMasuk::where('no_agenda', '3')->first();
         $firstPath = $surat->file_surat[0];
 
         // Add second file
-        $response = $this->actingAs($this->user)->put(route('surat-masuk.update', $surat->id), [
-            'jenis_surat' => 'Surat Masuk',
+        $updateData = $this->getValidSuratMasukData([
             'no_agenda' => '3',
-            'tanggal_terima' => date('Y-m-d'),
-            'pengirim' => 'Instansi C',
             'perihal' => 'Perihal Test 3 Updated',
             'file_surat' => [$file2],
-            'bidang_tujuan_ids' => [],
+            'bidang_tujuan_ids' => [$this->bidang->id],
             'status_disposisi' => 'belum',
         ]);
+        
+        $response = $this->actingAs($this->user)->put(route('surat-masuk.update', $surat->id), $updateData);
         $response->assertRedirect();
 
         $surat->refresh();
         $this->assertCount(2, $surat->file_surat);
 
         // Legacy: hapus_file = '1' should delete all
-        $response = $this->actingAs($this->user)->put(route('surat-masuk.update', $surat->id), [
-            'jenis_surat' => 'Surat Masuk',
+        $deleteData = $this->getValidSuratMasukData([
             'no_agenda' => '3',
-            'tanggal_terima' => date('Y-m-d'),
-            'pengirim' => 'Instansi C',
-            'perihal' => 'Perihal Test 3 Updated',
             'hapus_file' => '1',
-            'bidang_tujuan_ids' => [],
+            'bidang_tujuan_ids' => [$this->bidang->id],
             'status_disposisi' => 'belum',
         ]);
+        
+        $response = $this->actingAs($this->user)->put(route('surat-masuk.update', $surat->id), $deleteData);
         $response->assertRedirect();
 
         $surat->refresh();
