@@ -3,7 +3,7 @@
     $klasifikasiList = \App\Models\KlasifikasiArsip::whereNull('parent_id')->orderBy('kode')->get(['id', 'kode', 'nama']);
     $bidangList = \App\Models\Bidang::orderBy('nama_bidang')->get(['id', 'nama_bidang', 'kode_bidang']);
     $tahunList = \App\Models\TahunArsip::orderByDesc('tahun')->pluck('tahun');
-    $statusList = ['draft', 'dikirim', 'selesai'];
+    $statusList = ['konsep', 'dikirim', 'selesai'];
     $jenisSuratList = ['SPT', 'SPPD', 'SK', 'Undangan'];
 @endphp
 @extends('layouts.app')
@@ -71,9 +71,9 @@
                     <label class="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">Status</label>
                     <select x-model="filters.status" @change="fetch()" class="form-select w-full py-2 text-sm">
                         <option value="">Semua Status</option>
-                        @foreach($statusList as $status)
-                            <option value="{{ $status }}">{{ ucfirst($status) }}</option>
-                        @endforeach
+                        <option value="konsep">Konsep</option>
+                        <option value="dikirim">Dikirim</option>
+                        <option value="selesai">Selesai</option>
                     </select>
                 </div>
 
@@ -99,7 +99,9 @@
 
                 <div>
                     <label class="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">Klasifikasi</label>
-                    <select x-model="filters.klasifikasi" @change="fetch()" class="form-select w-full py-2 text-sm">
+                    <select x-model="filters.klasifikasi" @change="fetch()" class="tomselect w-full py-2 text-sm"
+                            data-placeholder="Cari kode atau nama klasifikasi..."
+                            x-ref="klasifikasiSelect">
                         <option value="">Semua Klasifikasi</option>
                         @foreach($klasifikasiList as $klasifikasi)
                             <option value="{{ $klasifikasi->id }}">{{ $klasifikasi->kode }} - {{ Str::limit($klasifikasi->nama, 30) }}</option>
@@ -190,7 +192,7 @@
     <x-card>
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
-                <thead class="bg-slate-50 dark:bg-slate-700/50">
+                <thead class="bg-slate-50 dark:bg-slate-700/50 hidden sm:table-header-group">
                     <tr>
                         <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">No.</th>
                         <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Tgl Surat</th>
@@ -225,7 +227,7 @@
                             @elseif($surat->status == 'dikirim')
                                 <x-badge type="blue">Dikirim</x-badge>
                             @else
-                                <x-badge type="yellow">Draft</x-badge>
+                                <x-badge type="yellow">Konsep</x-badge>
                             @endif
                         </td>
                         <td class="px-4 py-3 text-right">
@@ -238,7 +240,7 @@
                                 </a>
                                 @can('update', $surat)
                                     <a href="{{ route('surat-keluar.edit', array_merge([$surat->id], request()->has('tahun') ? ['jenis_surat' => request('jenis_surat'), 'tahun' => request('tahun')] : ['jenis_surat' => request('jenis_surat')])) }}"
-                                       class="rounded-lg p-2.5 text-yellow-600 dark:text-yellow-400 hover:bg-yellow-50 dark:hover:bg-yellow-900/30 transition-colors" title="Edit">
+                                       class="rounded-lg p-2.5 text-yellow-600 dark:text-yellow-400 hover:bg-yellow-50 dark:hover:bg-yellow-900/30 transition-colors" title="Sunting">
                                         <svg class="h-4 w-4 sm:h-5 sm:w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                         </svg>
@@ -379,6 +381,7 @@
     </div>
 </div>
 
+{{-- Delete Confirmation Modal --}}
 <div id="hapusModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
     <div class="bg-white dark:bg-slate-800 rounded-xl shadow-2xl max-w-md w-full p-6">
         <div class="flex items-start gap-3 mb-4">
@@ -535,5 +538,66 @@
             },
         }));
     });
+
+    // Initialize TomSelect for klasifikasi select in filter
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('suratForm', () => ({
+            init() {
+                this.$nextTick(() => {
+                    if (typeof TomSelect !== 'undefined') {
+                        new TomSelect('[x-ref="klasifikasiSelect"]', {
+                            plugins: ['remove_button'],
+                            valueField: 'id',
+                            labelField: 'nama',
+                            searchField: ['kode', 'nama'],
+                            create: false,
+                            render: {
+                                option: function(data, escape) {
+                                    return '<div class="option">' +
+                                        '<span class="kode">' + escape(data.kode) + '</span>' +
+                                        '<span class="nama">' + escape(data.nama) + '</span>' +
+                                        '</div>';
+                                }
+                            },
+                            onChange: function(value) {
+                                this.$dispatch('change', { target: { name: 'klasifikasi_id', value: value } });
+                            }
+                        });
+                    }
+                }
+            }));
+        }
+    });
 </script>
+@push('styles')
+<style>
+    /* TomSelect styling */
+    .ts-control {
+        @apply bg-white/50 border border-white/60 focus:bg-white focus:border-brand focus:ring-4 focus:ring-brand/10 rounded-xl sm:text-sm transition-all duration-200 outline-none text-slate-800 font-medium placeholder-slate-400 shadow-inner;
+    }
+    .ts-control:focus {
+        @apply bg-white focus:border-brand focus:ring-4 focus:ring-brand/10;
+    }
+    .ts-dropdown .option {
+        @apply px-3 py-2;
+    }
+    .ts-dropdown .option .kode {
+        @apply font-mono font-semibold text-primary;
+    }
+    .ts-dropdown .option .nama {
+        @apply ml-2 text-slate-700 dark:text-slate-300;
+    }
+    .ts-dropdown .active {
+        @apply bg-primary-light dark:bg-primary/20;
+    }
+    .ts-control .item {
+        @apply bg-primary text-white rounded;
+    }
+    
+    /* Nav pills styling */
+    .nav-pill-active { background-color: #1A365D !important; color: #ffffff !important; border-color: #1A365D !important; }
+    .dark .nav-pill-active { background-color: #1A365D !important; color: #ffffff !important; border-color: #1A365D !important; }
+    .nav-pill-inactive { background-color: #F7FAFC !important; color: #4A5568 !important; border-color: #E2E8F0 !important; }
+    .dark .nav-pill-inactive { background-color: #1e293b !important; color: #cbd5e1 !important; border-color: #334155 !important; }
+</style>
 @endpush

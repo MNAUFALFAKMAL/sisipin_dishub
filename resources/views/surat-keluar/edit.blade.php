@@ -109,11 +109,12 @@
                     @enderror
                 </div>
 
-                {{-- 7. Klasifikasi Arsip --}}
+                {{-- 7. Klasifikasi Arsip (TomSelect) --}}
                 <div>
                     <label for="klasifikasi_id" class="block text-sm font-semibold text-slate-700 mb-1">Klasifikasi Arsip <span class="text-red-500">*</span></label>
                     <select id="klasifikasi_id" name="klasifikasi_id"
-                            class="block w-full px-4 py-3 bg-white/50 border border-white/60 focus:bg-white focus:border-brand focus:ring-4 focus:ring-brand/10 rounded-xl sm:text-sm transition-all duration-200 outline-none text-slate-800 font-medium appearance-none bg-no-repeat bg-right @error('klasifikasi_id') border-red-300 focus:border-red-500 focus:ring-red-200 @enderror"
+                            class="tomselect w-full"
+                            data-placeholder="Cari kode atau nama klasifikasi..."
                             required>
                         <option value="">-- Pilih Kode Klasifikasi --</option>
                         @foreach($klasifikasiList as $klasifikasi)
@@ -284,12 +285,19 @@
                     class="inline-flex items-center px-4 py-3 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-xl hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 transition-colors">
                     Batal
                 </a>
-                <button type="submit"
+                <button type="submit" name="action" value="draft"
+                    class="inline-flex items-center px-4 py-3 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-xl hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 transition-colors">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    Simpan Konsep
+                </button>
+                <button type="submit" name="action" value="kirim"
                     class="inline-flex items-center px-6 py-3 text-sm font-medium text-white bg-gradient-to-r from-brand to-accent rounded-xl shadow-md hover:from-brand-dark hover:to-accent-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand transition-all duration-200">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                     </svg>
-                    Simpan Perubahan
+                    Simpan & Kirim
                 </button>
             </div>
         </form>
@@ -299,6 +307,36 @@
 
 @push('scripts')
 <script>
+    // Initialize TomSelect for klasifikasi
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('suratKeluarForm', () => ({
+            init() {
+                this.$nextTick(() => {
+                    if (typeof TomSelect !== 'undefined') {
+                        new TomSelect('#klasifikasi_id', {
+                            plugins: ['remove_button'],
+                            valueField: 'id',
+                            labelField: 'nama',
+                            searchField: ['kode', 'nama'],
+                            create: false,
+                            render: {
+                                option: function(data, escape) {
+                                    return '<div class="option">' +
+                                        '<span class="kode">' + escape(data.kode) + '</span>' +
+                                        '<span class="nama">' + escape(data.nama) + '</span>' +
+                                        '</div>';
+                                }
+                            },
+                            onChange: function(value) {
+                                this.$dispatch('change', { target: { name: 'klasifikasi_id', value: value } });
+                            }
+                        });
+                    }
+                }
+            }));
+        }
+    }));
+
     // File preview functionality for new uploads
     document.addEventListener('DOMContentLoaded', function() {
         const fileInput = document.getElementById('file_surat');
@@ -342,4 +380,29 @@
         }
     });
 </script>
+@push('styles')
+<style>
+    /* TomSelect styling */
+    .ts-control {
+        @apply bg-white/50 border border-white/60 focus:bg-white focus:border-brand focus:ring-4 focus:ring-brand/10 rounded-xl sm:text-sm transition-all duration-200 outline-none text-slate-800 font-medium placeholder-slate-400 shadow-inner;
+    }
+    .ts-control:focus {
+        @apply bg-white focus:border-brand focus:ring-4 focus:ring-brand/10;
+    }
+    .ts-dropdown .option {
+        @apply px-3 py-2;
+    }
+    .ts-dropdown .option .kode {
+        @apply font-mono font-semibold text-primary;
+    }
+    .ts-dropdown .option .nama {
+        @apply ml-2 text-slate-700 dark:text-slate-300;
+    }
+    .ts-dropdown .active {
+        @apply bg-primary-light dark:bg-primary/20;
+    }
+    .ts-control .item {
+        @apply bg-primary text-white rounded;
+    }
+</style>
 @endpush
