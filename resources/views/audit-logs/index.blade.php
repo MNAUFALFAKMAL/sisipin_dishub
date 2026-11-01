@@ -9,7 +9,7 @@
     <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
             <h2 class="text-lg font-bold text-slate-800 dark:text-slate-100">Audit Log</h2>
-            <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Pantau aktivitas pembuatan, pembaruan, dan penghapusan data surat oleh pengguna</p>
+            <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Pantau aktivitas login/logout serta pembuatan, pembaruan, dan penghapusan data oleh pengguna</p>
         </div>
     </div>
 
@@ -59,6 +59,12 @@
                                 <x-badge type="green">CREATED</x-badge>
                             @elseif($log->activity === 'updated')
                                 <x-badge type="blue">UPDATED</x-badge>
+                            @elseif($log->activity === 'role_changed')
+                                <x-badge type="yellow">ROLE_CHANGED</x-badge>
+                            @elseif($log->activity === 'login')
+                                <x-badge type="green">LOGIN</x-badge>
+                            @elseif($log->activity === 'logout')
+                                <x-badge type="gray">LOGOUT</x-badge>
                             @elseif($log->activity === 'deleted')
                                 <x-badge type="red">DELETED</x-badge>
                             @else
@@ -71,7 +77,7 @@
                         </td>
                         <td class="table-td text-left min-w-[300px]">
                             {{-- Detail cell: plain, no background box, clean typography --}}
-                            @if($log->activity === 'updated')
+                            @if(in_array($log->activity, ['updated', 'role_changed']))
                                 <p class="text-[11px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wide mb-1">Perubahan Kolom:</p>
                                 @if(is_array($log->new_values))
                                     @foreach($log->new_values as $key => $val)
@@ -115,6 +121,10 @@
                                         @endif
                                     @endforeach
                                 @endif
+                            @elseif($log->activity === 'login')
+                                <span class="text-xs text-emerald-600 dark:text-emerald-400 font-medium">Login ke sistem</span>
+                            @elseif($log->activity === 'logout')
+                                <span class="text-xs text-slate-500 dark:text-slate-400 font-medium">Logout dari sistem</span>
                             @else
                                 <span class="text-xs text-slate-400 dark:text-slate-500">Tidak ada detail</span>
                             @endif
