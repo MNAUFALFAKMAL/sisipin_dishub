@@ -121,7 +121,7 @@
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">
-                            @foreach(\App\Models\SuratMasuk::where('bidang_tujuan_id', auth()->user()->bidang_id)->latest()->take(5)->get() as $surat)
+                            @forelse(\App\Models\SuratMasuk::where('bidang_tujuan_id', auth()->user()->bidang_id)->latest()->take(5)->get() as $surat)
                             <tr class="hover:bg-slate-50">
                                 <td class="py-3 text-sm text-slate-900">{{ $surat->no_surat }}</td>
                                 <td class="py-3 text-sm text-slate-600">{{ $surat->pengirim }}</td>
@@ -140,7 +140,7 @@
                             <tr>
                                 <td colspan="5" class="py-8 text-center text-slate-500">Belum ada surat masuk ke bidang ini</td>
                             </tr>
-                            @endforeach
+                            @endforelse
                         </tbody>
                     </table>
                 </div>

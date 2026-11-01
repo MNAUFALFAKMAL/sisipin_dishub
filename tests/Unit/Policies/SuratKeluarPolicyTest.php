@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Policies;
 
+use App\Models\Bidang;
 use App\Models\SuratKeluar;
 use App\Models\User;
 use App\Policies\SuratKeluarPolicy;
@@ -14,7 +15,7 @@ class SuratKeluarPolicyTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->policy = new SuratKeluarPolicy();
+        $this->policy = new SuratKeluarPolicy;
     }
 
     public function test_super_admin_can_view_any_surat_keluar()
@@ -44,7 +45,7 @@ class SuratKeluarPolicyTest extends TestCase
 
     public function test_user_can_view_own_surat_keluar()
     {
-        $user = User::factory()->create();
+        $user = User::factory()->pegawai()->create();
         $surat = SuratKeluar::factory()->create(['dibuat_oleh' => $user->id]);
         $this->assertTrue($this->policy->view($user, $surat));
     }
@@ -65,7 +66,7 @@ class SuratKeluarPolicyTest extends TestCase
 
     public function test_kepala_bidang_can_view_own_bidang_surat_keluar()
     {
-        $bidang = \App\Models\Bidang::factory()->create();
+        $bidang = Bidang::factory()->create();
         $kepalaBidang = User::factory()->kepalaBidang()->create(['bidang_id' => $bidang->id]);
         $surat = SuratKeluar::factory()->create(['bidang_id' => $bidang->id]);
         $this->assertTrue($this->policy->view($kepalaBidang, $surat));
@@ -73,8 +74,8 @@ class SuratKeluarPolicyTest extends TestCase
 
     public function test_kepala_bidang_cannot_view_other_bidang_surat_keluar()
     {
-        $bidang1 = \App\Models\Bidang::factory()->create();
-        $bidang2 = \App\Models\Bidang::factory()->create();
+        $bidang1 = Bidang::factory()->create();
+        $bidang2 = Bidang::factory()->create();
         $kepalaBidang = User::factory()->kepalaBidang()->create(['bidang_id' => $bidang1->id]);
         $surat = SuratKeluar::factory()->create(['bidang_id' => $bidang2->id]);
         $this->assertFalse($this->policy->view($kepalaBidang, $surat));
@@ -83,7 +84,7 @@ class SuratKeluarPolicyTest extends TestCase
     public function test_pegawai_cannot_view_other_user_surat_keluar()
     {
         $pegawai = User::factory()->pegawai()->create();
-        $otherUser = User::factory()->create();
+        $otherUser = User::factory()->pegawai()->create();
         $surat = SuratKeluar::factory()->create(['dibuat_oleh' => $otherUser->id]);
         $this->assertFalse($this->policy->view($pegawai, $surat));
     }
@@ -122,22 +123,22 @@ class SuratKeluarPolicyTest extends TestCase
 
     public function test_user_can_update_own_draft_surat_keluar()
     {
-        $user = User::factory()->create();
+        $user = User::factory()->pegawai()->create();
         $surat = SuratKeluar::factory()->create(['dibuat_oleh' => $user->id, 'status' => 'draft']);
         $this->assertTrue($this->policy->update($user, $surat));
     }
 
     public function test_user_cannot_update_non_draft_surat_keluar()
     {
-        $user = User::factory()->create();
+        $user = User::factory()->pegawai()->create();
         $surat = SuratKeluar::factory()->create(['dibuat_oleh' => $user->id, 'status' => 'dikirim']);
         $this->assertFalse($this->policy->update($user, $surat));
     }
 
     public function test_user_cannot_update_other_user_surat_keluar()
     {
-        $user = User::factory()->create();
-        $otherUser = User::factory()->create();
+        $user = User::factory()->pegawai()->create();
+        $otherUser = User::factory()->pegawai()->create();
         $surat = SuratKeluar::factory()->create(['dibuat_oleh' => $otherUser->id, 'status' => 'draft']);
         $this->assertFalse($this->policy->update($user, $surat));
     }
@@ -158,14 +159,14 @@ class SuratKeluarPolicyTest extends TestCase
 
     public function test_user_can_delete_own_draft_surat_keluar()
     {
-        $user = User::factory()->create();
+        $user = User::factory()->pegawai()->create();
         $surat = SuratKeluar::factory()->create(['dibuat_oleh' => $user->id, 'status' => 'draft']);
         $this->assertTrue($this->policy->delete($user, $surat));
     }
 
     public function test_user_cannot_delete_non_draft_surat_keluar()
     {
-        $user = User::factory()->create();
+        $user = User::factory()->pegawai()->create();
         $surat = SuratKeluar::factory()->create(['dibuat_oleh' => $user->id, 'status' => 'dikirim']);
         $this->assertFalse($this->policy->delete($user, $surat));
     }

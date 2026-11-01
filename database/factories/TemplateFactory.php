@@ -2,10 +2,11 @@
 
 namespace Database\Factories;
 
+use App\Models\Template;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Template>
+ * @extends Factory<Template>
  */
 class TemplateFactory extends Factory
 {
@@ -13,7 +14,7 @@ class TemplateFactory extends Factory
     {
         return [
             'name' => fake()->words(3, true),
-            'file_path' => 'templates/' . fake()->slug . '.docx',
+            'file_path' => 'templates/'.fake()->slug.'.docx',
             'category' => fake()->word(),
             'is_active' => true,
         ];

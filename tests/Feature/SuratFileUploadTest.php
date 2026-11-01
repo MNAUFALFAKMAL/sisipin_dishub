@@ -2,11 +2,12 @@
 
 namespace Tests\Feature;
 
+use App\Models\Bidang;
+use App\Models\KlasifikasiArsip;
 use App\Models\SuratKeluar;
 use App\Models\SuratMasuk;
+use App\Models\TahunArsip;
 use App\Models\User;
-use App\Models\KlasifikasiArsip;
-use App\Models\Bidang;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -17,7 +18,9 @@ class SuratFileUploadTest extends TestCase
     use RefreshDatabase;
 
     protected User $user;
+
     protected KlasifikasiArsip $klasifikasi;
+
     protected Bidang $bidang;
 
     protected function setUp(): void
@@ -25,6 +28,9 @@ class SuratFileUploadTest extends TestCase
         parent::setUp();
         // Create a user with tata_usaha role who can access surat-masuk/keluar
         $this->user = User::factory()->tataUsaha()->create();
+
+        // Surat requests require tahun to exist in tahun_arsips.
+        TahunArsip::create(['tahun' => (int) date('Y')]);
 
         // Create required related data
         $this->klasifikasi = KlasifikasiArsip::factory()->create([
@@ -41,18 +47,37 @@ class SuratFileUploadTest extends TestCase
     protected function getValidSuratMasukData(array $overrides = []): array
     {
         return array_merge([
-            'jenis_surat'     => 'Surat Masuk',
-            'tahun'           => date('Y'),
-            'no_agenda'       => '1',
-            'no_surat'        => '001/TEST/' . date('Y'),
-            'tanggal_surat'   => date('Y-m-d'),
-            'tanggal_terima'  => date('Y-m-d'),
-            'pengirim'        => 'Instansi Test',
-            'perihal'         => 'Perihal Test',
-            'isi_ringkas'     => 'Isi ringkas test',
-            'klasifikasi_id'  => $this->klasifikasi->id,
-            'bidang_tujuan_id'=> $this->bidang->id,
-            'keterangan'      => 'Keterangan test',
+            'jenis_surat' => 'Surat Masuk',
+            'tahun' => date('Y'),
+            'no_agenda' => '1',
+            'no_surat' => '001/TEST/'.date('Y'),
+            'tanggal_surat' => date('Y-m-d'),
+            'tanggal_terima' => date('Y-m-d'),
+            'pengirim' => 'Instansi Test',
+            'perihal' => 'Perihal Test',
+            'isi_ringkas' => 'Isi ringkas test',
+            'klasifikasi_id' => $this->klasifikasi->id,
+            'bidang_tujuan_id' => $this->bidang->id,
+            'keterangan' => 'Keterangan test',
+        ], $overrides);
+    }
+
+    protected function getValidSuratKeluarData(array $overrides = []): array
+    {
+        return array_merge([
+            'jenis_surat' => 'SPT',
+            'tahun' => date('Y'),
+            'no_agenda' => '1',
+            'no_surat' => '800/1/V.13/'.date('Y'),
+            'tanggal_surat' => date('Y-m-d'),
+            'tanggal_terima' => date('Y-m-d'),
+            'tujuan' => 'Instansi Test',
+            'perihal' => 'Perihal Test',
+            'isi_ringkas' => 'Isi ringkas test',
+            'klasifikasi_id' => $this->klasifikasi->id,
+            'bidang_id' => $this->bidang->id,
+            'penandatangan' => 'Kepala Dinas Perhubungan',
+            'keterangan' => 'Keterangan test',
         ], $overrides);
     }
 
@@ -70,7 +95,7 @@ class SuratFileUploadTest extends TestCase
             'file_surat' => [$file1],
             'bidang_tujuan_ids' => [$this->bidang->id],
         ]);
-        
+
         $response = $this->actingAs($this->user)->post(route('surat-masuk.store'), $data);
 
         $response->assertSessionHasNoErrors();
@@ -91,7 +116,7 @@ class SuratFileUploadTest extends TestCase
             'bidang_tujuan_ids' => [$this->bidang->id],
             'status_disposisi' => 'belum',
         ]);
-        
+
         $response = $this->actingAs($this->user)->put(route('surat-masuk.update', $surat->id), $updateData);
         $response->assertRedirect();
 
@@ -117,7 +142,7 @@ class SuratFileUploadTest extends TestCase
             'file_surat' => [$file1],
             'bidang_tujuan_ids' => [$this->bidang->id],
         ]);
-        
+
         $response = $this->actingAs($this->user)->post(route('surat-masuk.store'), $data);
         $response->assertRedirect();
 
@@ -132,7 +157,7 @@ class SuratFileUploadTest extends TestCase
             'bidang_tujuan_ids' => [$this->bidang->id],
             'status_disposisi' => 'belum',
         ]);
-        
+
         $response = $this->actingAs($this->user)->put(route('surat-masuk.update', $surat->id), $updateData);
         $response->assertRedirect();
 
@@ -147,7 +172,7 @@ class SuratFileUploadTest extends TestCase
             'bidang_tujuan_ids' => [$this->bidang->id],
             'status_disposisi' => 'belum',
         ]);
-        
+
         $response = $this->actingAs($this->user)->put(route('surat-masuk.update', $surat->id), $deleteData);
         $response->assertRedirect();
 
@@ -159,9 +184,9 @@ class SuratFileUploadTest extends TestCase
     }
 
     /**
-     * Test Surat Masuk: legacy hapus_file = '1' deletes all files
+     * Test Surat Masuk: passing all stored paths in hapus_file deletes them all
      */
-    public function test_surat_masuk_legacy_hapus_file_deletes_all(): void
+    public function test_surat_masuk_hapus_file_deletes_all(): void
     {
         Storage::fake('public');
 
@@ -173,7 +198,7 @@ class SuratFileUploadTest extends TestCase
             'file_surat' => [$file1],
             'bidang_tujuan_ids' => [$this->bidang->id],
         ]);
-        
+
         $response = $this->actingAs($this->user)->post(route('surat-masuk.store'), $data);
         $response->assertRedirect();
 
@@ -188,21 +213,21 @@ class SuratFileUploadTest extends TestCase
             'bidang_tujuan_ids' => [$this->bidang->id],
             'status_disposisi' => 'belum',
         ]);
-        
+
         $response = $this->actingAs($this->user)->put(route('surat-masuk.update', $surat->id), $updateData);
         $response->assertRedirect();
 
         $surat->refresh();
         $this->assertCount(2, $surat->file_surat);
 
-        // Legacy: hapus_file = '1' should delete all
+        // Passing every stored path removes all attached files
         $deleteData = $this->getValidSuratMasukData([
             'no_agenda' => '3',
-            'hapus_file' => '1',
+            'hapus_file' => $surat->file_surat,
             'bidang_tujuan_ids' => [$this->bidang->id],
             'status_disposisi' => 'belum',
         ]);
-        
+
         $response = $this->actingAs($this->user)->put(route('surat-masuk.update', $surat->id), $deleteData);
         $response->assertRedirect();
 
@@ -219,15 +244,10 @@ class SuratFileUploadTest extends TestCase
         Storage::fake('public');
 
         $file1 = UploadedFile::fake()->image('keluar1.jpg', 100, 100);
-        $response = $this->actingAs($this->user)->post(route('surat-keluar.store'), [
-            'jenis_surat' => 'Surat Keluar',
+        $response = $this->actingAs($this->user)->post(route('surat-keluar.store'), $this->getValidSuratKeluarData([
             'no_agenda' => '1',
-            'tanggal_terima' => date('Y-m-d'),
-            'tujuan' => 'Instansi X',
-            'perihal' => 'Perihal Keluar',
             'file_surat' => [$file1],
-            'bidang_ids' => [],
-        ]);
+        ]));
         $response->assertRedirect();
 
         $surat = SuratKeluar::where('no_agenda', '1')->first();
@@ -236,15 +256,11 @@ class SuratFileUploadTest extends TestCase
         $this->assertTrue(Storage::disk('public')->exists($firstPath));
 
         $file2 = UploadedFile::fake()->image('keluar2.jpg', 120, 120);
-        $response = $this->actingAs($this->user)->put(route('surat-keluar.update', $surat->id), [
-            'jenis_surat' => 'Surat Keluar',
+        $response = $this->actingAs($this->user)->put(route('surat-keluar.update', $surat->id), $this->getValidSuratKeluarData([
             'no_agenda' => '1',
-            'tanggal_terima' => date('Y-m-d'),
-            'tujuan' => 'Instansi X',
             'perihal' => 'Perihal Keluar Updated',
             'file_surat' => [$file2],
-            'bidang_ids' => [],
-        ]);
+        ]));
         $response->assertRedirect();
 
         $surat->refresh();
@@ -263,44 +279,35 @@ class SuratFileUploadTest extends TestCase
         $file1 = UploadedFile::fake()->image('keluar1.jpg', 100, 100);
         $file2 = UploadedFile::fake()->image('keluar2.jpg', 120, 120);
 
-        $response = $this->actingAs($this->user)->post(route('surat-keluar.store'), [
-            'jenis_surat' => 'Surat Keluar',
+        $response = $this->actingAs($this->user)->post(route('surat-keluar.store'), $this->getValidSuratKeluarData([
             'no_agenda' => '2',
-            'tanggal_terima' => date('Y-m-d'),
             'tujuan' => 'Instansi Y',
             'perihal' => 'Perihal Keluar 2',
             'file_surat' => [$file1],
-            'bidang_ids' => [],
-        ]);
+        ]));
         $response->assertRedirect();
 
         $surat = SuratKeluar::where('no_agenda', '2')->first();
         $firstPath = $surat->file_surat[0];
 
-        $response = $this->actingAs($this->user)->put(route('surat-keluar.update', $surat->id), [
-            'jenis_surat' => 'Surat Keluar',
+        $response = $this->actingAs($this->user)->put(route('surat-keluar.update', $surat->id), $this->getValidSuratKeluarData([
             'no_agenda' => '2',
-            'tanggal_terima' => date('Y-m-d'),
             'tujuan' => 'Instansi Y',
             'perihal' => 'Perihal Keluar 2 Updated',
             'file_surat' => [$file2],
-            'bidang_ids' => [],
-        ]);
+        ]));
         $response->assertRedirect();
 
         $surat->refresh();
         $this->assertCount(2, $surat->file_surat);
         $secondPath = $surat->file_surat[1];
 
-        $response = $this->actingAs($this->user)->put(route('surat-keluar.update', $surat->id), [
-            'jenis_surat' => 'Surat Keluar',
+        $response = $this->actingAs($this->user)->put(route('surat-keluar.update', $surat->id), $this->getValidSuratKeluarData([
             'no_agenda' => '2',
-            'tanggal_terima' => date('Y-m-d'),
             'tujuan' => 'Instansi Y',
             'perihal' => 'Perihal Keluar 2 Updated',
             'hapus_file' => [$firstPath],
-            'bidang_ids' => [],
-        ]);
+        ]));
         $response->assertRedirect();
 
         $surat->refresh();

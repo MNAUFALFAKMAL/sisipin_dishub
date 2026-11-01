@@ -17,6 +17,8 @@ class SuratKeluar extends Model
         'no_surat', 'tanggal_surat', 'tanggal_terima', 'tujuan',
         'perihal', 'isi_ringkas', 'file_surat',
         'bidang_id', 'dibuat_oleh', 'keterangan',
+        'penandatangan', 'status', 'indeks_berkas',
+        'tingkat_keamanan', 'masa_simpan',
     ];
 
     protected $casts = [

@@ -15,15 +15,16 @@ class PdfUtilityTest extends TestCase
 
     protected function makeUser(): User
     {
-        return User::factory()->create(['role' => 'staff']);
+        return User::factory()->staff()->create();
     }
 
     protected function makeValidPdf(): string
     {
-        $mpdf = new Mpdf();
+        $mpdf = new Mpdf;
         $mpdf->WriteHTML('<h1>Sample PDF</h1><p>FPDI merge test.</p>');
         $mpdf->AddPage();
         $mpdf->WriteHTML('<h1>Page Two</h1>');
+
         return $mpdf->Output('', 'S');
     }
 

@@ -121,7 +121,7 @@
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">
-                            @foreach(\App\Models\SuratKeluar::latest()->take(5)->get() as $surat)
+                            @forelse(\App\Models\SuratKeluar::latest()->take(5)->get() as $surat)
                             <tr class="hover:bg-slate-50">
                                 <td class="py-3 text-sm text-slate-900">{{ $surat->no_surat ?? '-' }}</td>
                                 <td class="py-3 text-sm text-slate-600">{{ $surat->tujuan }}</td>
@@ -133,7 +133,7 @@
                             <tr>
                                 <td colspan="5" class="py-8 text-center text-slate-500">Belum ada surat keluar</td>
                             </tr>
-                            @endforeach
+                            @endforelse
                         </tbody>
                     </table>
                 </div>
