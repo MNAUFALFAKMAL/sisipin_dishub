@@ -9,6 +9,7 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     
     @stack('styles')
+    @livewire_head
 </head>
 <body class="h-full bg-neutral-50 dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 transition-colors duration-200">
     <!-- Skip Link untuk Aksesibilitas -->
