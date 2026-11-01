@@ -29,13 +29,13 @@ class PegawaiTest extends TestCase
 
         $response = $this->actingAs($admin)->from('/pegawai')
             ->post('/pegawai', [
-                'nama'       => 'Budi Santoso, S.E.',
-                'nip'        => '19710422 199503 1 002',
-                'pangkat'    => 'Penata Muda',
-                'golongan'   => 'III/a',
-                'jabatan'    => 'Staf',
-                'unit_bidang'=> 'Bidang LLA',
-                'status'     => 'aktif',
+                'nama' => 'Budi Santoso, S.E.',
+                'nip' => '19710422 199503 1 002',
+                'pangkat' => 'Penata Muda',
+                'golongan' => 'III/a',
+                'jabatan' => 'Staf',
+                'unit_bidang' => 'Bidang LLA',
+                'status' => 'aktif',
             ]);
 
         $response->assertRedirect('/pegawai');
@@ -72,13 +72,13 @@ class PegawaiTest extends TestCase
 
         $response = $this->actingAs($admin)
             ->from('/pegawai')
-            ->put('/pegawai/' . $pegawai->id, [
-                'nama'       => 'Budi Santoso Baru, S.E.',
-                'pangkat'    => 'Penata',
-                'golongan'   => 'III/b',
-                'jabatan'    => 'Kasubag',
-                'unit_bidang'=> 'Sekretariat',
-                'status'     => 'aktif',
+            ->put('/pegawai/'.$pegawai->id, [
+                'nama' => 'Budi Santoso Baru, S.E.',
+                'pangkat' => 'Penata',
+                'golongan' => 'III/b',
+                'jabatan' => 'Kasubag',
+                'unit_bidang' => 'Sekretariat',
+                'status' => 'aktif',
             ]);
 
         $response->assertRedirect('/pegawai');
@@ -91,9 +91,9 @@ class PegawaiTest extends TestCase
         $pegawai = Pegawai::create(['nama' => 'Budi Santoso, S.E.', 'status' => 'aktif']);
 
         $response = $this->actingAs($admin)
-            ->put('/pegawai/' . $pegawai->id, [
-                'nama'       => 'Budi Santoso, S.E.',
-                'status'     => 'aktif',
+            ->put('/pegawai/'.$pegawai->id, [
+                'nama' => 'Budi Santoso, S.E.',
+                'status' => 'aktif',
             ]);
 
         $response->assertRedirect('/pegawai');
@@ -107,7 +107,7 @@ class PegawaiTest extends TestCase
 
         $response = $this->actingAs($admin)
             ->from('/pegawai')
-            ->delete('/pegawai/' . $pegawai->id);
+            ->delete('/pegawai/'.$pegawai->id);
 
         $response->assertRedirect('/pegawai');
         $this->assertDatabaseHas('pegawais', ['id' => $pegawai->id, 'status' => 'tidak_aktif']);
@@ -119,7 +119,7 @@ class PegawaiTest extends TestCase
         $pegawai = Pegawai::create(['nama' => 'Budi Santoso, S.E.', 'status' => 'tidak_aktif']);
 
         $response = $this->actingAs($admin)
-            ->patch('/pegawai/' . $pegawai->id . '/activate');
+            ->patch('/pegawai/'.$pegawai->id.'/activate');
 
         $response->assertRedirect();
         $this->assertDatabaseHas('pegawais', ['id' => $pegawai->id, 'status' => 'aktif']);

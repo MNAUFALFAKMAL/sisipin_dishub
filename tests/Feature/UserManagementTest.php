@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Peran;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -37,14 +38,14 @@ class UserManagementTest extends TestCase
     public function test_super_admin_can_create_user()
     {
         $superAdmin = User::factory()->superAdmin()->create();
-        $peranTataUsaha = \App\Models\Peran::where('slug', 'tata_usaha')->first();
+        $peranTataUsaha = Peran::where('slug', 'tata_usaha')->first();
 
         $response = $this->actingAs($superAdmin)->post('/pengguna', [
-            'name'      => 'User Baru',
-            'username'  => 'userbaru@test.com',
-            'password'  => 'password123',
+            'name' => 'User Baru',
+            'username' => 'userbaru@test.com',
+            'password' => 'password123',
             'password_confirmation' => 'password123',
-            'peran_id'  => $peranTataUsaha->id,
+            'peran_id' => $peranTataUsaha->id,
             'bidang_id' => null,
             'is_active' => true,
         ]);
@@ -58,12 +59,12 @@ class UserManagementTest extends TestCase
     {
         $superAdmin = User::factory()->superAdmin()->create();
         $user = User::factory()->pegawai()->create();
-        $peranTataUsaha = \App\Models\Peran::where('slug', 'tata_usaha')->first();
+        $peranTataUsaha = Peran::where('slug', 'tata_usaha')->first();
 
-        $response = $this->actingAs($superAdmin)->put('/pengguna/' . $user->id, [
-            'name'      => 'User Diupdate',
-            'username'  => $user->email,
-            'peran_id'  => $peranTataUsaha->id,
+        $response = $this->actingAs($superAdmin)->put('/pengguna/'.$user->id, [
+            'name' => 'User Diupdate',
+            'username' => $user->email,
+            'peran_id' => $peranTataUsaha->id,
             'bidang_id' => null,
             'is_active' => true,
         ]);
@@ -77,12 +78,12 @@ class UserManagementTest extends TestCase
     {
         $superAdmin = User::factory()->superAdmin()->create();
         $user = User::factory()->pegawai()->create();
-        $peranTataUsaha = \App\Models\Peran::where('slug', 'tata_usaha')->first();
+        $peranTataUsaha = Peran::where('slug', 'tata_usaha')->first();
 
-        $response = $this->actingAs($superAdmin)->put('/pengguna/' . $user->id, [
-            'name'      => $user->name,
-            'username'  => $user->email,
-            'peran_id'  => $peranTataUsaha->id,
+        $response = $this->actingAs($superAdmin)->put('/pengguna/'.$user->id, [
+            'name' => $user->name,
+            'username' => $user->email,
+            'peran_id' => $peranTataUsaha->id,
             'bidang_id' => null,
             'is_active' => true,
         ]);
@@ -96,12 +97,12 @@ class UserManagementTest extends TestCase
     {
         $tataUsaha = User::factory()->tataUsaha()->create();
         $user = User::factory()->pegawai()->create();
-        $peranStaff = \App\Models\Peran::where('slug', 'staff')->first();
+        $peranStaff = Peran::where('slug', 'staff')->first();
 
-        $response = $this->actingAs($tataUsaha)->put('/pengguna/' . $user->id, [
-            'name'      => $user->name,
-            'username'  => $user->email,
-            'peran_id'  => $peranStaff->id,
+        $response = $this->actingAs($tataUsaha)->put('/pengguna/'.$user->id, [
+            'name' => $user->name,
+            'username' => $user->email,
+            'peran_id' => $peranStaff->id,
             'bidang_id' => null,
             'is_active' => true,
         ]);
@@ -115,7 +116,7 @@ class UserManagementTest extends TestCase
         $superAdmin = User::factory()->superAdmin()->create();
         $user = User::factory()->pegawai()->create();
 
-        $response = $this->actingAs($superAdmin)->delete('/pengguna/' . $user->id);
+        $response = $this->actingAs($superAdmin)->delete('/pengguna/'.$user->id);
 
         $response->assertRedirect('/pengguna');
         $response->assertSessionHas('success');
@@ -127,10 +128,10 @@ class UserManagementTest extends TestCase
     {
         $superAdmin = User::factory()->superAdmin()->create();
 
-        $response = $this->actingAs($superAdmin)->delete('/pengguna/' . $superAdmin->id);
+        $response = $this->actingAs($superAdmin)->delete('/pengguna/'.$superAdmin->id);
 
-        $response->assertRedirect();
-        $response->assertSessionHas('error');
+        // UserPolicy::deactivate menolak aksi terhadap akun sendiri.
+        $response->assertForbidden();
         $superAdmin->refresh();
         $this->assertTrue($superAdmin->is_active);
     }
@@ -140,7 +141,7 @@ class UserManagementTest extends TestCase
         $superAdmin1 = User::factory()->superAdmin()->create();
         $superAdmin2 = User::factory()->superAdmin()->create();
 
-        $response = $this->actingAs($superAdmin1)->delete('/pengguna/' . $superAdmin2->id);
+        $response = $this->actingAs($superAdmin1)->delete('/pengguna/'.$superAdmin2->id);
 
         $response->assertRedirect();
         $response->assertSessionHas('error');
@@ -153,7 +154,7 @@ class UserManagementTest extends TestCase
         $superAdmin = User::factory()->superAdmin()->create();
         $user = User::factory()->pegawai()->create(['is_active' => false]);
 
-        $response = $this->actingAs($superAdmin)->patch('/pengguna/' . $user->id . '/activate');
+        $response = $this->actingAs($superAdmin)->patch('/pengguna/'.$user->id.'/activate');
 
         $response->assertRedirect();
         $response->assertSessionHas('success');
@@ -164,18 +165,16 @@ class UserManagementTest extends TestCase
     public function test_user_can_update_own_profile_not_role()
     {
         $user = User::factory()->pegawai()->create();
-        $peranStaff = \App\Models\Peran::where('slug', 'staff')->first();
+        $peranStaff = Peran::where('slug', 'staff')->first();
 
-        // User can update their own name and email but not role
-        $response = $this->actingAs($user)->put('/pengguna/' . $user->id, [
-            'name'      => 'Nama Baru',
-            'username'  => 'newemail@test.com',
-            'peran_id'  => $peranStaff->id, // Should be ignored
-            'bidang_id' => null,
-            'is_active' => true,
+        // Self-service profile updates use /profile; peran_id is ignored there.
+        $response = $this->actingAs($user)->patch('/profile', [
+            'name' => 'Nama Baru',
+            'email' => 'newemail@test.com',
+            'peran_id' => $peranStaff->id,
         ]);
 
-        $response->assertRedirect('/pengguna');
+        $response->assertRedirect('/profile');
         $user->refresh();
         $this->assertEquals('Nama Baru', $user->name);
         $this->assertEquals('newemail@test.com', $user->email);

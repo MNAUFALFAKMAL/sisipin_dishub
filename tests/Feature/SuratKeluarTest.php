@@ -2,10 +2,11 @@
 
 namespace Tests\Feature;
 
-use App\Models\SuratKeluar;
-use App\Models\User;
-use App\Models\KlasifikasiArsip;
 use App\Models\Bidang;
+use App\Models\KlasifikasiArsip;
+use App\Models\SuratKeluar;
+use App\Models\TahunArsip;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -16,7 +17,9 @@ class SuratKeluarTest extends TestCase
     use RefreshDatabase;
 
     protected User $user;
+
     protected KlasifikasiArsip $klasifikasi;
+
     protected Bidang $bidang;
 
     protected function setUp(): void
@@ -24,6 +27,9 @@ class SuratKeluarTest extends TestCase
         parent::setUp();
         // Create a user with tata_usaha role who can access surat-keluar
         $this->user = User::factory()->tataUsaha()->create();
+
+        // StoreSuratKeluarRequest requires tahun to exist in tahun_arsips.
+        TahunArsip::create(['tahun' => (int) date('Y')]);
 
         // Create required related data
         $this->klasifikasi = KlasifikasiArsip::factory()->create([
@@ -40,22 +46,22 @@ class SuratKeluarTest extends TestCase
     protected function getValidSuratKeluarData(array $overrides = []): array
     {
         return array_merge([
-            'jenis_surat'      => 'SPT',
-            'tahun'            => date('Y'),
-            'no_agenda'        => '1',
-            'no_surat'         => '800/1/V.13/' . date('Y'),
-            'tanggal_surat'    => date('Y-m-d'),
-            'tanggal_terima'   => date('Y-m-d'),
-            'tujuan'           => 'Instansi Test',
-            'perihal'          => 'Perihal Test',
-            'isi_ringkas'      => 'Isi ringkas test',
-            'klasifikasi_id'   => $this->klasifikasi->id,
-            'bidang_id'        => $this->bidang->id,
-            'penandatangan'    => 'Kepala Dinas Perhubungan',
-            'keterangan'       => 'Keterangan test',
-            'indeks_berkas'    => '001/DISHUB/2026',
+            'jenis_surat' => 'SPT',
+            'tahun' => date('Y'),
+            'no_agenda' => '1',
+            'no_surat' => '800/1/V.13/'.date('Y'),
+            'tanggal_surat' => date('Y-m-d'),
+            'tanggal_terima' => date('Y-m-d'),
+            'tujuan' => 'Instansi Test',
+            'perihal' => 'Perihal Test',
+            'isi_ringkas' => 'Isi ringkas test',
+            'klasifikasi_id' => $this->klasifikasi->id,
+            'bidang_id' => $this->bidang->id,
+            'penandatangan' => 'Kepala Dinas Perhubungan',
+            'keterangan' => 'Keterangan test',
+            'indeks_berkas' => '001/DISHUB/2026',
             'tingkat_keamanan' => 'Biasa',
-            'masa_simpan'      => '5 Tahun',
+            'masa_simpan' => '5 Tahun',
         ], $overrides);
     }
 
@@ -72,7 +78,7 @@ class SuratKeluarTest extends TestCase
             'no_agenda' => '1',
             'file_surat' => [$file1],
         ]);
-        
+
         $response = $this->actingAs($this->user)->post(route('surat-keluar.store'), $data);
 
         $response->assertSessionHasNoErrors();
@@ -91,7 +97,7 @@ class SuratKeluarTest extends TestCase
             'perihal' => 'Perihal Test Updated',
             'file_surat' => [$file2],
         ]);
-        
+
         $response = $this->actingAs($this->user)->put(route('surat-keluar.update', $surat->id), $updateData);
         $response->assertRedirect();
 
@@ -116,7 +122,7 @@ class SuratKeluarTest extends TestCase
             'no_agenda' => '2',
             'file_surat' => [$file1],
         ]);
-        
+
         $response = $this->actingAs($this->user)->post(route('surat-keluar.store'), $data);
         $response->assertRedirect();
 
@@ -129,7 +135,7 @@ class SuratKeluarTest extends TestCase
             'perihal' => 'Perihal Test 2 Updated',
             'file_surat' => [$file2],
         ]);
-        
+
         $response = $this->actingAs($this->user)->put(route('surat-keluar.update', $surat->id), $updateData);
         $response->assertRedirect();
 
@@ -142,7 +148,7 @@ class SuratKeluarTest extends TestCase
             'no_agenda' => '2',
             'hapus_file' => [$firstPath],
         ]);
-        
+
         $response = $this->actingAs($this->user)->put(route('surat-keluar.update', $surat->id), $deleteData);
         $response->assertRedirect();
 
@@ -154,9 +160,9 @@ class SuratKeluarTest extends TestCase
     }
 
     /**
-     * Test Surat Keluar: legacy hapus_file = '1' deletes all files
+     * Test Surat Keluar: passing all stored paths in hapus_file deletes them all
      */
-    public function test_surat_keluar_legacy_hapus_file_deletes_all(): void
+    public function test_surat_keluar_hapus_file_deletes_all(): void
     {
         Storage::fake('public');
 
@@ -167,7 +173,7 @@ class SuratKeluarTest extends TestCase
             'no_agenda' => '3',
             'file_surat' => [$file1],
         ]);
-        
+
         $response = $this->actingAs($this->user)->post(route('surat-keluar.store'), $data);
         $response->assertRedirect();
 
@@ -180,19 +186,19 @@ class SuratKeluarTest extends TestCase
             'perihal' => 'Perihal Test 3 Updated',
             'file_surat' => [$file2],
         ]);
-        
+
         $response = $this->actingAs($this->user)->put(route('surat-keluar.update', $surat->id), $updateData);
         $response->assertRedirect();
 
         $surat->refresh();
         $this->assertCount(2, $surat->file_surat);
 
-        // Legacy: hapus_file = '1' should delete all
+        // Passing every stored path removes all attached files
         $deleteData = $this->getValidSuratKeluarData([
             'no_agenda' => '3',
-            'hapus_file' => '1',
+            'hapus_file' => $surat->file_surat,
         ]);
-        
+
         $response = $this->actingAs($this->user)->put(route('surat-keluar.update', $surat->id), $deleteData);
         $response->assertRedirect();
 
@@ -210,7 +216,7 @@ class SuratKeluarTest extends TestCase
             'no_agenda' => '4',
             'jenis_surat' => 'InvalidJenis',
         ]);
-        
+
         $response = $this->actingAs($this->user)->post(route('surat-keluar.store'), $data);
         $response->assertSessionHasErrors('jenis_surat');
     }
@@ -225,11 +231,11 @@ class SuratKeluarTest extends TestCase
                 'no_agenda' => (string) (rand(1000, 9999)),
                 'jenis_surat' => $jenis,
             ]);
-            
+
             $response = $this->actingAs($this->user)->post(route('surat-keluar.store'), $data);
             $response->assertSessionHasNoErrors();
             $response->assertRedirect();
-            
+
             $surat = SuratKeluar::where('no_agenda', $data['no_agenda'])->first();
             $this->assertEquals($jenis, $surat->jenis_surat);
         }
@@ -244,7 +250,7 @@ class SuratKeluarTest extends TestCase
             'no_agenda' => '5',
             'penandatangan' => '',
         ]);
-        
+
         $response = $this->actingAs($this->user)->post(route('surat-keluar.store'), $data);
         $response->assertSessionHasErrors('penandatangan');
     }
@@ -258,7 +264,7 @@ class SuratKeluarTest extends TestCase
             'no_agenda' => '6',
             'tujuan' => '',
         ]);
-        
+
         $response = $this->actingAs($this->user)->post(route('surat-keluar.store'), $data);
         $response->assertSessionHasErrors('tujuan');
     }
@@ -277,7 +283,7 @@ class SuratKeluarTest extends TestCase
         // Try to create second with same no_agenda and tahun
         $data2 = $this->getValidSuratKeluarData([
             'no_agenda' => '7',
-            'no_surat' => '800/2/V.13/' . date('Y'),
+            'no_surat' => '800/2/V.13/'.date('Y'),
         ]);
         $response = $this->actingAs($this->user)->post(route('surat-keluar.store'), $data2);
         $response->assertSessionHasErrors('no_agenda');

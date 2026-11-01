@@ -50,20 +50,20 @@ class CheckRoleMiddlewareTest extends TestCase
         $response->assertStatus(403);
     }
 
-    public function test_pegawai_can_access_pegawai_route()
+    public function test_pegawai_cannot_access_pegawai_management_route()
     {
         $pegawai = User::factory()->pegawai()->create();
 
         $response = $this->actingAs($pegawai)->get('/pegawai');
-        $response->assertStatus(200);
+        $response->assertStatus(403);
     }
 
-    public function test_super_admin_cannot_access_pegawai_route()
+    public function test_super_admin_can_access_pegawai_management_route()
     {
         $superAdmin = User::factory()->superAdmin()->create();
 
         $response = $this->actingAs($superAdmin)->get('/pegawai');
-        $response->assertStatus(403);
+        $response->assertStatus(200);
     }
 
     public function test_kepala_dinas_can_access_kepala_dinas_route()

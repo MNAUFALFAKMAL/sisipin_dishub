@@ -2,11 +2,11 @@
 
 namespace Database\Factories;
 
-use Illuminate\Database\Eloquent\Factories\Factory;
 use App\Models\Peran;
+use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Peran>
+ * @extends Factory<Peran>
  */
 class PeranFactory extends Factory
 {
@@ -20,18 +20,18 @@ class PeranFactory extends Factory
     public function definition(): array
     {
         return [
-            'nama'       => fake()->jobTitle(),
-            'slug'       => fake()->unique()->slug(),
-            'deskripsi'  => fake()->sentence(),
-            'is_active'  => true,
+            'nama' => fake()->jobTitle(),
+            'slug' => fake()->unique()->slug(),
+            'deskripsi' => fake()->sentence(),
+            'is_active' => true,
         ];
     }
 
     public function superAdmin(): static
     {
         return $this->state(fn (array $attributes) => [
-            'nama'      => 'Super Admin',
-            'slug'      => 'super_admin',
+            'nama' => 'Super Admin',
+            'slug' => 'super_admin',
             'deskripsi' => 'Akses penuh ke seluruh sistem',
         ]);
     }
@@ -39,8 +39,8 @@ class PeranFactory extends Factory
     public function tataUsaha(): static
     {
         return $this->state(fn (array $attributes) => [
-            'nama'      => 'Tata Usaha',
-            'slug'      => 'tata_usaha',
+            'nama' => 'Tata Usaha',
+            'slug' => 'tata_usaha',
             'deskripsi' => 'Mengelola surat masuk/keluar, disposisi, dan administrasi umum',
         ]);
     }
@@ -48,8 +48,8 @@ class PeranFactory extends Factory
     public function pegawai(): static
     {
         return $this->state(fn (array $attributes) => [
-            'nama'      => 'Pegawai',
-            'slug'      => 'pegawai',
+            'nama' => 'Pegawai',
+            'slug' => 'pegawai',
             'deskripsi' => 'Membuat dan mengelola surat serta tugas sehari-hari',
         ]);
     }
@@ -57,8 +57,8 @@ class PeranFactory extends Factory
     public function kepalaDinas(): static
     {
         return $this->state(fn (array $attributes) => [
-            'nama'      => 'Kepala Dinas',
-            'slug'      => 'kepala_dinas',
+            'nama' => 'Kepala Dinas',
+            'slug' => 'kepala_dinas',
             'deskripsi' => 'Menyetujui surat keluar dan mengakses laporan',
         ]);
     }
@@ -66,8 +66,8 @@ class PeranFactory extends Factory
     public function kepalaBidang(): static
     {
         return $this->state(fn (array $attributes) => [
-            'nama'      => 'Kepala Bidang',
-            'slug'      => 'kepala_bidang',
+            'nama' => 'Kepala Bidang',
+            'slug' => 'kepala_bidang',
             'deskripsi' => 'Menyetujui disposisi dan mengelola surat dalam bidangnya',
         ]);
     }
@@ -75,8 +75,8 @@ class PeranFactory extends Factory
     public function staff(): static
     {
         return $this->state(fn (array $attributes) => [
-            'nama'      => 'Staff',
-            'slug'      => 'staff',
+            'nama' => 'Staff',
+            'slug' => 'staff',
             'deskripsi' => 'Membuat surat dan melaksanakan tugas operasional',
         ]);
     }
