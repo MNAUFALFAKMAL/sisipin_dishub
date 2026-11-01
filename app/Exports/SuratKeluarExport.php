@@ -2,35 +2,39 @@
 
 namespace App\Exports;
 
+use App\Exports\Concerns\RekapSheetLayout;
+use App\Traits\PreventsFormulaInjection;
+use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\FromCollection;
+use Maatwebsite\Excel\Concerns\WithCustomStartCell;
+use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithStyles;
-use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithTitle;
-use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Events\AfterSheet;
-use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
-use Maatwebsite\Excel\Concerns\WithTitle;
-use Maatwebsite\Excel\Concerns\WithEvents;
-use App\Traits\PreventsFormulaInjection;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class SuratKeluarExport implements FromCollection, WithHeadings, WithMapping, WithStyles, ShouldAutoSize, WithTitle, WithEvents
+class SuratKeluarExport implements FromCollection, WithCustomStartCell, WithEvents, WithHeadings, WithMapping, WithStyles, WithTitle
 {
     use PreventsFormulaInjection;
+    use RekapSheetLayout;
 
     protected $collection;
+
     protected $title;
 
-    public function __construct($collection, $title = 'Surat Keluar')
+    public function __construct($collection, $title = 'Surat Keluar', ?string $periodeLabel = null, ?string $reportTitle = null)
     {
         // Sort by no_agenda descending (latest first; cast as integer then by string for sub-numbers)
-        $this->collection = $collection->sortByDesc(function($item) {
-            return [(int)$item->no_agenda, $item->no_agenda];
+        $this->collection = $collection->sortByDesc(function ($item) {
+            return [(int) $item->no_agenda, $item->no_agenda];
         })->values();
         $this->title = $title;
+        $this->periodeLabel = $periodeLabel;
+        $this->reportTitle = $reportTitle;
     }
 
     public function title(): string
@@ -39,7 +43,7 @@ class SuratKeluarExport implements FromCollection, WithHeadings, WithMapping, Wi
     }
 
     /**
-     * @return \Illuminate\Support\Collection
+     * @return Collection
      */
     public function collection()
     {
@@ -111,11 +115,12 @@ class SuratKeluarExport implements FromCollection, WithHeadings, WithMapping, Wi
 
     public function styles(Worksheet $sheet)
     {
+        $headerRow = $this->headerRow();
         $highestRow = $sheet->getHighestRow();
         $highestCol = $sheet->getHighestColumn();
-        
-        $range = 'A1:' . $highestCol . $highestRow;
-        
+
+        $range = 'A'.$headerRow.':'.$highestCol.$highestRow;
+
         $sheet->getStyle($range)->applyFromArray([
             'alignment' => [
                 'vertical' => Alignment::VERTICAL_CENTER,
@@ -128,40 +133,46 @@ class SuratKeluarExport implements FromCollection, WithHeadings, WithMapping, Wi
                 ],
             ],
         ]);
-        
+
         // Header bold
-        $sheet->getStyle('A1:' . $highestCol . '1')->applyFromArray([
+        $sheet->getStyle('A'.$headerRow.':'.$highestCol.$headerRow)->applyFromArray([
             'font' => [
                 'bold' => true,
-            ]
+            ],
         ]);
-        
+
         // Specific alignment for Perihal (Column H)
-        if ($highestRow > 1) {
-            $sheet->getStyle('H2:H' . $highestRow)->applyFromArray([
+        if ($highestRow > $headerRow) {
+            $sheet->getStyle('H'.($headerRow + 1).':H'.$highestRow)->applyFromArray([
                 'alignment' => [
                     'horizontal' => Alignment::HORIZONTAL_LEFT,
                     'indent' => 3,
                     'vertical' => Alignment::VERTICAL_CENTER,
                     'wrapText' => true,
-                ]
+                ],
             ]);
         }
     }
-    
+
     public function registerEvents(): array
     {
         return [
-            AfterSheet::class => function(AfterSheet $event) {
+            AfterSheet::class => function (AfterSheet $event) {
+                $sheet = $event->sheet->getDelegate();
+                $headerRow = $this->headerRow();
+
+                $this->applyReportHeader($sheet);
+                $this->applyColumnWidths($sheet, $this->headings());
+
                 // Auto-filter on header row
-                $event->sheet->setAutoFilter('A1:O1');
-                
+                $sheet->setAutoFilter('A'.$headerRow.':O'.$headerRow);
+
                 // Add second sheet with instructions for template
                 if (str_contains($this->title, 'Template')) {
                     $spreadsheet = $event->sheet->getParent();
                     $instructionSheet = $spreadsheet->createSheet();
                     $instructionSheet->setTitle('Panduan');
-                    
+
                     $instructions = [
                         ['PANDUAN PENGGUNAAN TEMPLATE IMPORT SURAT KELUAR'],
                         [''],
@@ -181,13 +192,13 @@ class SuratKeluarExport implements FromCollection, WithHeadings, WithMapping, Wi
                         ['1', '2026', '800/1/V.13/2026', '2026-01-15', '2026-01-15', 'SPT', 'Kepala Dinas Pendidikan Provinsi Lampung', 'Perintah Tugas Dinas Luar Kota', 'Perintah tugas ke Jakarta untuk rapat koordinasi', 'LLA', '000.1', 'Kepala Dinas Perhubungan', 'Draft', '', ''],
                         ['2', '2026', '800/2/V.13/2026', '2026-01-20', '2026-01-20', 'SK', 'Kepala Dinas Pendidikan Provinsi Lampung', 'Penetapan Jabatan', 'Penetapan jabatan fungsional', 'BKS', '100', 'Kepala Dinas Perhubungan', 'Selesai', '', ''],
                     ];
-                    
+
                     foreach ($instructions as $rowIndex => $row) {
                         foreach ($row as $colIndex => $cell) {
                             $instructionSheet->setCellValueByColumnAndRow($colIndex + 1, $rowIndex + 1, $cell);
                         }
                     }
-                    
+
                     // Style the instruction sheet
                     $instructionSheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
                     $instructionSheet->getStyle('A3')->getFont()->setBold(true);

@@ -223,6 +223,7 @@
             <form method="GET" action="" onsubmit="prepareExportFormRekap()">
                 <input type="hidden" name="start_date" id="export_start_date_rekap">
                 <input type="hidden" name="end_date" id="export_end_date_rekap">
+                <input type="hidden" name="bidang_id" value="{{ request('bidang_id') }}">
                 
                 <div class="mb-5">
                     <label class="text-sm font-semibold text-slate-600 dark:text-slate-300 block mb-2">Pilih Tipe Periode</label>

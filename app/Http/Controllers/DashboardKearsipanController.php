@@ -2,10 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\RekapSuratExport;
+use App\Models\Bidang;
+use App\Models\User;
 use App\Services\DashboardKearsipanService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
 
 class DashboardKearsipanController extends Controller
 {
@@ -32,69 +36,53 @@ class DashboardKearsipanController extends Controller
      */
     public function exportExcel(Request $request)
     {
-        $startDate = $request->input('start_date');
-        $endDate = $request->input('end_date');
+        $filters = $this->exportFilters($request);
+        $periode = $this->periodeLabel($filters['start'], $filters['end']);
 
-        if (($startDate && !strtotime($startDate)) || ($endDate && !strtotime($endDate))) {
-            return redirect()->back()->withErrors(['Tanggal tidak valid.']);
-        }
+        $filename = 'Rekap Surat Dishub '.$periode.'.xlsx';
 
-        $filename = 'Rekap Surat Dishub';
-        if ($startDate && $endDate) {
-            $start = Carbon::parse($startDate);
-            $end = Carbon::parse($endDate);
-            if ($start->format('Y-m-d') === $start->copy()->startOfYear()->format('Y-m-d') &&
-                $end->format('Y-m-d') === $end->copy()->endOfYear()->format('Y-m-d')) {
-                $filename .= ' Tahun ' . $start->format('Y');
-            } elseif ($start->format('Y-m') === $end->format('Y-m') && 
-                $start->format('Y-m-d') === $start->copy()->startOfMonth()->format('Y-m-d') && 
-                $end->format('Y-m-d') === $end->copy()->endOfMonth()->format('Y-m-d')) {
-                $filename .= ' Bulan ' . $start->translatedFormat('F Y');
-            } else {
-                $filename .= ' ' . $start->translatedFormat('d F Y') . ' - ' . $end->translatedFormat('d F Y');
-            }
-        } else {
-            $filename .= ' Semua Waktu';
-        }
-        $filename .= '.xlsx';
-
-        return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\RekapSuratExport($startDate, $endDate), $filename);
+        return Excel::download(
+            new RekapSuratExport($filters['start'], $filters['end'], $filters['bidang_id']),
+            $filename
+        );
     }
 
     public function exportPdf(Request $request)
     {
-        $startDate = $request->input('start_date');
-        $endDate = $request->input('end_date');
-
-        if (($startDate && !strtotime($startDate)) || ($endDate && !strtotime($endDate))) {
-            return redirect()->back()->withErrors(['Tanggal tidak valid.']);
-        }
-
-        $title = 'Rekap Laporan Data Surat';
-        $periodeStr = 'Semua Waktu';
-
-        if ($startDate && $endDate) {
-            $start = Carbon::parse($startDate);
-            $end = Carbon::parse($endDate);
-            if ($start->format('Y-m-d') === $start->copy()->startOfYear()->format('Y-m-d') &&
-                $end->format('Y-m-d') === $end->copy()->endOfYear()->format('Y-m-d')) {
-                $periodeStr = 'Tahun ' . $start->format('Y');
-            } elseif ($start->format('Y-m') === $end->format('Y-m') && 
-                $start->format('Y-m-d') === $start->copy()->startOfMonth()->format('Y-m-d') && 
-                $end->format('Y-m-d') === $end->copy()->endOfMonth()->format('Y-m-d')) {
-                $periodeStr = 'Bulan ' . $start->translatedFormat('F Y');
-            } else {
-                $periodeStr = $start->translatedFormat('d F Y') . ' - ' . $end->translatedFormat('d F Y');
-            }
-        }
+        $filters = $this->exportFilters($request);
+        $periodeStr = $this->periodeLabel($filters['start'], $filters['end']);
+        $title = 'Rekap Surat Periode '.$periodeStr;
 
         $data = array_merge(
-            $this->dashboardKearsipanService->getSuratMasukForExport($startDate, $endDate),
-            $this->dashboardKearsipanService->getSuratKeluarForExport($startDate, $endDate)
+            $this->dashboardKearsipanService->getSuratMasukForExport(
+                $filters['start'],
+                $filters['end'],
+                $filters['bidang_id']
+            ),
+            $this->dashboardKearsipanService->getSuratKeluarForExport(
+                $filters['start'],
+                $filters['end'],
+                $filters['bidang_id']
+            )
         );
 
-        $pdf = Pdf::loadView('kearsipan.rekap-pdf', compact('title', 'periodeStr', 'data'))->setPaper('a4', 'landscape');
-        return $pdf->download('Rekap Surat Dishub ' . $periodeStr . '.pdf');
+        $bidang = $filters['bidang_id']
+            ? Bidang::find($filters['bidang_id'])?->nama_bidang
+            : null;
+
+        $kepalaDinas = User::whereHas('peran', fn ($query) => $query->where('slug', 'kepala_dinas'))->first();
+
+        $penandatangan = [
+            'nama' => $kepalaDinas?->name ?: '................................',
+            'nip' => $kepalaDinas?->nip ?: '................................',
+        ];
+
+        $pdf = Pdf::loadView(
+            'kearsipan.rekap-pdf',
+            compact('title', 'periodeStr', 'data', 'bidang', 'penandatangan')
+        )->setPaper('a4', 'landscape');
+
+        return $pdf->download('Rekap Surat Dishub '.$periodeStr.'.pdf');
     }
 
     /**
@@ -103,5 +91,54 @@ class DashboardKearsipanController extends Controller
     public function pembelajaran()
     {
         return view('pembelajaran.index');
+    }
+
+    /**
+     * @return array{start: ?string, end: ?string, bidang_id: ?int}
+     */
+    private function exportFilters(Request $request): array
+    {
+        $validated = $request->validate([
+            'start' => ['nullable', 'date'],
+            'end' => ['nullable', 'date'],
+            'start_date' => ['nullable', 'date'],
+            'end_date' => ['nullable', 'date'],
+            'bidang_id' => ['nullable', 'integer', 'exists:bidangs,id'],
+        ]);
+
+        return [
+            'start' => $validated['start'] ?? $validated['start_date'] ?? null,
+            'end' => $validated['end'] ?? $validated['end_date'] ?? null,
+            'bidang_id' => isset($validated['bidang_id']) ? (int) $validated['bidang_id'] : null,
+        ];
+    }
+
+    private function periodeLabel(?string $startDate, ?string $endDate): string
+    {
+        if (! $startDate && ! $endDate) {
+            return 'Semua Waktu';
+        }
+
+        $start = $startDate ? Carbon::parse($startDate) : null;
+        $end = $endDate ? Carbon::parse($endDate) : null;
+
+        if ($start && $end) {
+            if ($start->format('Y-m-d') === $start->copy()->startOfYear()->format('Y-m-d')
+                && $end->format('Y-m-d') === $end->copy()->endOfYear()->format('Y-m-d')) {
+                return 'Tahun '.$start->format('Y');
+            }
+
+            if ($start->format('Y-m') === $end->format('Y-m')
+                && $start->format('Y-m-d') === $start->copy()->startOfMonth()->format('Y-m-d')
+                && $end->format('Y-m-d') === $end->copy()->endOfMonth()->format('Y-m-d')) {
+                return 'Bulan '.$start->translatedFormat('F Y');
+            }
+
+            return $start->translatedFormat('d F Y').' - '.$end->translatedFormat('d F Y');
+        }
+
+        return $start
+            ? 'Sejak '.$start->translatedFormat('d F Y')
+            : 'Sampai '.$end->translatedFormat('d F Y');
     }
 }
