@@ -9,6 +9,7 @@ use App\Services\DashboardKearsipanService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Maatwebsite\Excel\Facades\Excel;
 
 class DashboardKearsipanController extends Controller
@@ -29,6 +30,20 @@ class DashboardKearsipanController extends Controller
         $grafikSurat = $this->dashboardKearsipanService->getChartData();
 
         return view('kearsipan.dashboard', compact('suratStats', 'grafikSurat'));
+    }
+
+    /**
+     * Endpoint JSON statistik untuk grafik dashboard.
+     */
+    public function statistik(Request $request)
+    {
+        $filters = $this->validatedFilters($request);
+
+        return response()->json($this->dashboardKearsipanService->getStatistik(
+            $filters['start'],
+            $filters['end'],
+            $filters['bidang_id']
+        ));
     }
 
     /**
@@ -98,11 +113,27 @@ class DashboardKearsipanController extends Controller
      */
     private function exportFilters(Request $request): array
     {
+        return $this->validatedFilters($request);
+    }
+
+    /**
+     * @return array{start: ?string, end: ?string, bidang_id: ?int}
+     */
+    private function validatedFilters(Request $request): array
+    {
         $validated = $request->validate([
             'start' => ['nullable', 'date'],
-            'end' => ['nullable', 'date'],
+            'end' => [
+                'nullable',
+                'date',
+                Rule::when($request->filled('start'), ['after_or_equal:start']),
+            ],
             'start_date' => ['nullable', 'date'],
-            'end_date' => ['nullable', 'date'],
+            'end_date' => [
+                'nullable',
+                'date',
+                Rule::when($request->filled('start_date'), ['after_or_equal:start_date']),
+            ],
             'bidang_id' => ['nullable', 'integer', 'exists:bidangs,id'],
         ]);
 
