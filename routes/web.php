@@ -122,6 +122,7 @@ Route::middleware(['auth'])->group(function () {
 
     // Default dashboard (fallback)
     Route::get('/dashboard', [DashboardKearsipanController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard/statistik', [DashboardKearsipanController::class, 'statistik'])->name('dashboard.statistik');
     Route::get('/dashboard/export/excel', [DashboardKearsipanController::class, 'exportExcel'])->name('dashboard.export.excel');
     Route::get('/dashboard/export/pdf', [DashboardKearsipanController::class, 'exportPdf'])->name('dashboard.export.pdf');
     Route::get('/pembelajaran', [DashboardKearsipanController::class, 'pembelajaran'])->name('pembelajaran');
