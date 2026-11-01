@@ -17,6 +17,18 @@ class DashboardKearsipanController extends Controller
     }
 
     /**
+     * API endpoint statistik dashboard (contract-compatible untuk FE).
+     * Return format: { total_masuk, total_keluar, per_bulan[], per_bidang[] }
+     * Data dummy sementara — nanti digantikan query nyata Nabila.
+     */
+    public function statistik()
+    {
+        $data = $this->dashboardKearsipanService->getStatistikData();
+
+        return response()->json($data);
+    }
+
+    /**
      * Menampilkan dashboard Kearsipan Dinamis (SIKD)
      */
     public function index()

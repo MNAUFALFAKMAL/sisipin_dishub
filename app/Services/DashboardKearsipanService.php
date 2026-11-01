@@ -82,6 +82,47 @@ class DashboardKearsipanService
         return $data;
     }
 
+    public function getStatistikData(): array
+    {
+        // Dummy data — bisa diganti query nyata dari Nabila nanti
+        $bulanList = [
+            ['bulan' => 'Jan', 'masuk' => 45, 'keluar' => 38],
+            ['bulan' => 'Feb', 'masuk' => 52, 'keluar' => 44],
+            ['bulan' => 'Mar', 'masuk' => 61, 'keluar' => 50],
+            ['bulan' => 'Apr', 'masuk' => 58, 'keluar' => 47],
+            ['bulan' => 'Mei', 'masuk' => 73, 'keluar' => 62],
+            ['bulan' => 'Jun', 'masuk' => 68, 'keluar' => 56],
+            ['bulan' => 'Jul', 'masuk' => 75, 'keluar' => 64],
+            ['bulan' => 'Agu', 'masuk' => 69, 'keluar' => 58],
+            ['bulan' => 'Sep', 'masuk' => 63, 'keluar' => 52],
+            ['bulan' => 'Okt', 'masuk' => 71, 'keluar' => 60],
+            ['bulan' => 'Nov', 'masuk' => 59, 'keluar' => 49],
+            ['bulan' => 'Des', 'masuk' => 67, 'keluar' => 55],
+        ];
+
+        // Data per bidang (sampel 8 bidang)
+        $bidangList = [
+            ['bidang' => 'Bidang Operasional', 'count' => 124],
+            ['bidang' => 'Bidang Kepegawaian', 'count' => 98],
+            ['bidang' => 'Bidang Humas', 'count' => 67],
+            ['bidang' => 'Bidang Keuangan', 'count' => 89],
+            ['bidang' => 'Bidang Tata Usaha', 'count' => 73],
+            ['bidang' => 'Bidang ASN', 'count' => 85],
+            ['bidang' => 'Bidang Pelayanan', 'count' => 56],
+            ['bidang' => 'Bidang Teknis', 'count' => 92],
+        ];
+
+        $totalMasuk = array_sum(array_column($bulanList, 'masuk'));
+        $totalKeluar = array_sum(array_column($bulanList, 'keluar'));
+
+        return [
+            'total_masuk' => $totalMasuk,
+            'total_keluar' => $totalKeluar,
+            'per_bulan' => $bulanList,
+            'per_bidang' => $bidangList,
+        ];
+    }
+
     public function getSuratMasukForExport(?string $startDate, ?string $endDate): array
     {
         $q = SuratMasuk::with(['klasifikasi', 'bidangTujuans']);
