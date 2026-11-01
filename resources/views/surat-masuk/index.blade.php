@@ -1,4 +1,4 @@
-﻿@php
+@php
     $jenisSurat = request('jenis_surat', 'Surat Masuk');
     $klasifikasiList = \App\Models\KlasifikasiArsip::whereNull('parent_id')->orderBy('kode')->get(['id', 'kode', 'nama']);
     $bidangList = \App\Models\Bidang::orderBy('nama_bidang')->get(['id', 'nama_bidang', 'kode_bidang']);
