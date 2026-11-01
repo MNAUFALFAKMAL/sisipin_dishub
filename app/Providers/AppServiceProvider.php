@@ -2,19 +2,20 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\ServiceProvider;
+use App\Models\Disposisi;
+use App\Models\SuratKeluar;
+use App\Models\SuratMasuk;
+use App\Models\TahunArsip;
+use App\Models\User;
+use App\Policies\DisposisiPolicy;
+use App\Policies\SuratKeluarPolicy;
+use App\Policies\SuratMasukPolicy;
+use App\Policies\UserPolicy;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Gate;
-use App\Models\User;
-use App\Models\SuratMasuk;
-use App\Models\SuratKeluar;
-use App\Models\Disposisi;
-use App\Policies\UserPolicy;
-use App\Policies\SuratMasukPolicy;
-use App\Policies\SuratKeluarPolicy;
-use App\Policies\DisposisiPolicy;
+use Illuminate\Support\Facades\View;
+use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -44,7 +45,7 @@ class AppServiceProvider extends ServiceProvider
             $isSqlite = DB::connection()->getDriverName() === 'sqlite';
             $yearExpr = $isSqlite
                 ? "CAST(strftime('%Y', COALESCE(tanggal_terima, created_at)) AS INTEGER)"
-                : "YEAR(COALESCE(tanggal_terima, created_at))";
+                : 'YEAR(COALESCE(tanggal_terima, created_at))';
 
             $tahunDariTabel = TahunArsip::query()->pluck('tahun');
             $tahunDariMasuk = SuratMasuk::query()

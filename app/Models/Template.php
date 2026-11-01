@@ -22,6 +22,7 @@ class Template extends Model
 
     protected $casts = [
         'placeholders' => 'array',
+        'is_active' => 'boolean',
     ];
 
     public function scopeActive($query)

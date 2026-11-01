@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Template;
 use App\Http\Requests\TemplateRequest;
+use App\Models\Template;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
-
 
 class TemplateController extends Controller
 {
@@ -19,7 +19,7 @@ class TemplateController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('category', 'like', "%{$search}%");
+                    ->orWhere('category', 'like', "%{$search}%");
             });
         }
 
@@ -31,32 +31,16 @@ class TemplateController extends Controller
     public function create()
     {
         $categories = $this->getCategories();
+
         return view('templates.create', compact('categories'));
     }
 
     public function store(TemplateRequest $request)
     {
-        $file = $request->file('file');
-        $originalName = $file->getClientOriginalName();
-        $safeName = Str::slug(pathinfo($originalName, PATHINFO_FILENAME)) . '_' . time() . '.docx';
-
-        // Simpan ke storage/app/public/templates (agar bisa diakses via serve-file)
-        $destinationPath = storage_path('app/public/templates');
-        if (!File::exists($destinationPath)) {
-            File::makeDirectory($destinationPath, 0755, true);
-        }
-
-        $file->move($destinationPath, $safeName);
-        $filePath = 'storage/templates/' . $safeName;
-
-        // Handle PDF (optional)
-        $pdfPath = null;
-        if ($request->hasFile('file_pdf')) {
-            $pdf = $request->file('file_pdf');
-            $pdfSafeName = Str::slug(pathinfo($pdf->getClientOriginalName(), PATHINFO_FILENAME)) . '_' . time() . '.pdf';
-            $pdf->move($destinationPath, $pdfSafeName);
-            $pdfPath = 'storage/templates/' . $pdfSafeName;
-        }
+        $filePath = $this->storeUploadedFile($request->file('file'), 'template');
+        $pdfPath = $request->hasFile('file_pdf')
+            ? $this->storeUploadedFile($request->file('file_pdf'), 'pratinjau')
+            : null;
 
         $template = Template::create([
             'name' => $request->name,
@@ -76,6 +60,7 @@ class TemplateController extends Controller
     public function show($id)
     {
         $template = Template::findOrFail($id);
+
         return view('templates.show', compact('template'));
     }
 
@@ -83,6 +68,7 @@ class TemplateController extends Controller
     {
         $template = Template::findOrFail($id);
         $categories = $this->getCategories();
+
         return view('templates.edit', compact('template', 'categories'));
     }
 
@@ -95,8 +81,8 @@ class TemplateController extends Controller
             'category' => 'required|string|max:100',
             'sub_kategori' => 'nullable|string|max:100',
             'is_active' => 'boolean',
-            'file' => 'nullable|file|mimes:docx|max:10240',
-            'file_pdf' => 'nullable|file|mimes:pdf|max:20480',
+            'file' => 'nullable|file|mimes:docx,pdf|max:10240',
+            'file_pdf' => 'nullable|file|mimes:pdf|max:10240',
             'google_drive_link' => 'nullable|string|max:500',
         ]);
 
@@ -108,34 +94,14 @@ class TemplateController extends Controller
             'google_drive_link' => $request->google_drive_link,
         ]);
 
-        $destinationPath = storage_path('app/public/templates');
-        
         if ($request->hasFile('file')) {
-            if ($template->file_path) {
-                $oldPath = public_path($template->file_path);
-                if (File::exists($oldPath)) {
-                    File::delete($oldPath);
-                }
-            }
-            
-            $file = $request->file('file');
-            $safeName = Str::slug(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME)) . '_' . time() . '.docx';
-            $file->move($destinationPath, $safeName);
-            $template->file_path = 'storage/templates/' . $safeName;
+            $this->deleteStoredFile($template->file_path);
+            $template->file_path = $this->storeUploadedFile($request->file('file'), 'template');
         }
-        
+
         if ($request->hasFile('file_pdf')) {
-            if ($template->file_pdf) {
-                $oldPdfPath = public_path($template->file_pdf);
-                if (File::exists($oldPdfPath)) {
-                    File::delete($oldPdfPath);
-                }
-            }
-            
-            $pdf = $request->file('file_pdf');
-            $pdfSafeName = Str::slug(pathinfo($pdf->getClientOriginalName(), PATHINFO_FILENAME)) . '_' . time() . '.pdf';
-            $pdf->move($destinationPath, $pdfSafeName);
-            $template->file_pdf = 'storage/templates/' . $pdfSafeName;
+            $this->deleteStoredFile($template->file_pdf);
+            $template->file_pdf = $this->storeUploadedFile($request->file('file_pdf'), 'pratinjau');
         }
 
         $template->save();
@@ -147,38 +113,28 @@ class TemplateController extends Controller
     public function removeFile($id)
     {
         $template = Template::findOrFail($id);
+
         if ($template->file_path) {
-            $fullPath = public_path($template->file_path);
-            if (File::exists($fullPath)) {
-                File::delete($fullPath);
-            }
-            $storagePath = storage_path('app/public/' . str_replace('storage/', '', $template->file_path));
-            if (File::exists($storagePath)) {
-                File::delete($storagePath);
-            }
+            $this->deleteStoredFile($template->file_path);
             $template->file_path = '';
             $template->placeholders = null;
             $template->save();
         }
+
         return redirect()->route('templates.edit', $id)
-            ->with('success', 'File .docx berhasil dihapus.');
+            ->with('success', 'File template berhasil dihapus.');
     }
 
     public function removeFilePdf($id)
     {
         $template = Template::findOrFail($id);
+
         if ($template->file_pdf) {
-            $fullPath = public_path($template->file_pdf);
-            if (File::exists($fullPath)) {
-                File::delete($fullPath);
-            }
-            $storagePath = storage_path('app/public/' . str_replace('storage/', '', $template->file_pdf));
-            if (File::exists($storagePath)) {
-                File::delete($storagePath);
-            }
+            $this->deleteStoredFile($template->file_pdf);
             $template->file_pdf = null;
             $template->save();
         }
+
         return redirect()->route('templates.edit', $id)
             ->with('success', 'File PDF pratinjau berhasil dihapus.');
     }
@@ -187,33 +143,55 @@ class TemplateController extends Controller
     {
         $template = Template::findOrFail($id);
 
-        // Hapus file
-        if ($template->file_path) {
-            $fullPath = public_path($template->file_path);
-            if (File::exists($fullPath)) {
-                File::delete($fullPath);
-            }
-            $storagePath = storage_path('app/public/' . str_replace('storage/', '', $template->file_path));
-            if (File::exists($storagePath)) {
-                File::delete($storagePath);
-            }
-        }
-
-        if ($template->file_pdf) {
-            $fullPdfPath = public_path($template->file_pdf);
-            if (File::exists($fullPdfPath)) {
-                File::delete($fullPdfPath);
-            }
-            $storagePdfPath = storage_path('app/public/' . str_replace('storage/', '', $template->file_pdf));
-            if (File::exists($storagePdfPath)) {
-                File::delete($storagePdfPath);
-            }
-        }
+        $this->deleteStoredFile($template->file_path);
+        $this->deleteStoredFile($template->file_pdf);
 
         $template->delete();
 
         return redirect()->route('templates.index')
             ->with('success', 'Template berhasil dihapus.');
+    }
+
+    /**
+     * Simpan berkas dengan nama yang aman dan unik.
+     */
+    private function storeUploadedFile(UploadedFile $file, string $fallback): string
+    {
+        $directory = storage_path('app/public/templates');
+        File::ensureDirectoryExists($directory, 0755, true);
+
+        $originalName = basename($file->getClientOriginalName());
+        $baseName = Str::slug(pathinfo($originalName, PATHINFO_FILENAME)) ?: $fallback;
+        $extension = strtolower($file->getClientOriginalExtension() ?: (string) $file->extension());
+
+        $fileName = $baseName.'_'.now()->format('YmdHis').'_'.Str::random(6).'.'.$extension;
+
+        $file->move($directory, $fileName);
+
+        return 'storage/templates/'.$fileName;
+    }
+
+    /**
+     * Hapus berkas fisik dari storage maupun public/storage.
+     */
+    private function deleteStoredFile(?string $path): void
+    {
+        if (! $path) {
+            return;
+        }
+
+        $fileName = basename(str_replace('\\', '/', $path));
+
+        $candidates = [
+            storage_path('app/public/templates/'.$fileName),
+            public_path('storage/templates/'.$fileName),
+        ];
+
+        foreach ($candidates as $candidate) {
+            if (File::isFile($candidate)) {
+                File::delete($candidate);
+            }
+        }
     }
 
     private function getCategories(): array

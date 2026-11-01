@@ -80,7 +80,7 @@
                 
                 {{-- File DOCX --}}
                 <div class="mb-6">
-                    <label class="form-label">File .docx (Word)</label>
+                    <label class="form-label">File Template (.docx / .pdf)</label>
                     <div class="flex flex-wrap items-center gap-3">
                         @if($template->file_path)
                         <a href="{{ route('file.serve', $template->serve_file_path) }}" target="_blank" class="text-blue-600 dark:text-blue-400 text-sm hover:underline flex items-center gap-1">
@@ -96,10 +96,10 @@
                         <div class="inline-flex items-stretch gap-0 rounded-lg border border-dashed border-gray-300 dark:border-gray-600 hover:border-blue-500 dark:hover:border-blue-400 transition-colors cursor-pointer" data-upload-area="file-input-docx">
                             <div class="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-600 dark:text-gray-300" id="upload-area-docx">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-500 dark:text-blue-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
-                                <span class="text-blue-600 dark:text-blue-400 font-medium">Pilih file .docx</span>
+                                <span class="text-blue-600 dark:text-blue-400 font-medium">Pilih file .docx / .pdf</span>
                             </div>
                         </div>
-                        <input id="file-input-docx" type="file" name="file" accept=".docx" class="sr-only" data-file-input data-name-id="file-name-docx" data-area-id="upload-area-docx">
+                        <input id="file-input-docx" type="file" name="file" accept=".docx,.pdf" class="sr-only" data-file-input data-name-id="file-name-docx" data-area-id="upload-area-docx">
                         <p class="text-xs text-gray-500 mt-1">Kosongkan jika tidak ingin mengganti file.</p>
                     </div>
                 </div>
