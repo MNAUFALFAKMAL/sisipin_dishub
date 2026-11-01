@@ -7,9 +7,12 @@ use Illuminate\Http\Request;
 
 class TataNaskahController extends Controller
 {
+    /**
+     * Katalog tata naskah publik, dikelompokkan per kategori lalu sub-kategori.
+     */
     public function publicIndex(Request $request)
     {
-        $searchQuery = $request->search ?? '';
+        $searchQuery = trim((string) $request->search);
 
         $query = Template::query()->where('is_active', true);
 
@@ -21,16 +24,17 @@ class TataNaskahController extends Controller
             });
         }
 
-        $templates = $query->orderBy('category')->orderBy('sub_kategori')->get();
+        $templates = $query->orderBy('name')->get();
 
         $items = $templates->map(function (Template $template) {
             $kategori = $template->category;
-            $subKategori = $template->sub_kategori;
+            $subKategori = $template->sub_kategori ?: 'Lainnya';
 
-            $hasPdf = !empty($template->serve_file_pdf);
             $filePdf = $template->serve_file_pdf;
             $fileDocx = $template->serve_file_path;
-            $isDocxOnly = !$hasPdf && !empty($fileDocx);
+            $isDocxOnly = empty($filePdf) && !empty($fileDocx);
+
+            $docxUrl = $fileDocx ? route('file.serve', $fileDocx) : null;
 
             return (object) [
                 'id' => 'tmpl_' . $template->id,
@@ -38,28 +42,45 @@ class TataNaskahController extends Controller
                 'kategori' => $kategori,
                 'sub_kategori' => $subKategori,
                 'nama_naskah' => $template->name,
-                'definisi' => '',
                 'file_docx' => $fileDocx,
                 'file_pdf' => $filePdf,
-                'has_preview' => $hasPdf,
-                'preview_url' => $hasPdf ? route('file.serve', $filePdf) : null,
-                'preview_label' => $kategori . ($subKategori ? ' → ' . $subKategori : ''),
+                'has_preview' => !empty($filePdf) || $isDocxOnly,
+                // PDF dibuka langsung di modal, DOCX memakai Google Docs Viewer.
+                'preview_url' => $filePdf ? route('file.serve', $filePdf) : null,
+                'docx_viewer_url' => $isDocxOnly
+                    ? 'https://docs.google.com/viewer?embedded=true&url=' . rawurlencode($docxUrl)
+                    : null,
+                'download_url' => $docxUrl,
+                'preview_label' => $kategori . ' - ' . $template->name,
                 'is_docx_only' => $isDocxOnly,
-                'docx_only_url' => $isDocxOnly ? route('file.serve', $fileDocx) : null,
-                'placeholders' => [],
                 'google_drive_link' => $template->google_drive_link,
             ];
         });
 
         $grouped = $items
             ->groupBy('kategori')
-            ->sortKeys()
+            ->sortKeysUsing(fn ($a, $b) => strnatcasecmp((string) $a, (string) $b))
             ->map(function ($group) {
-                return $group->sort(function ($a, $b) {
-                    return strnatcmp((string) $a->sub_kategori, (string) $b->sub_kategori);
-                })->values();
+                return $group
+                    ->groupBy('sub_kategori')
+                    ->sortKeysUsing(fn ($a, $b) => strnatcasecmp((string) $a, (string) $b))
+                    ->map(function ($subGroup) {
+                        return $subGroup
+                            ->sortBy(fn ($item) => mb_strtolower($item->nama_naskah))
+                            ->values();
+                    });
             });
 
-        return view('tata-naskah.public', compact('grouped'));
+        $totalCount = $items->count();
+        $kategoriCount = $grouped->count();
+        $subKategoriCount = $grouped->sum(fn ($subs) => $subs->count());
+
+        return view('tata-naskah.public', compact(
+            'grouped',
+            'totalCount',
+            'kategoriCount',
+            'subKategoriCount',
+            'searchQuery',
+        ));
     }
 }
