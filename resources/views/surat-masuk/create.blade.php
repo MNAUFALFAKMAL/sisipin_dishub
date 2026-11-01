@@ -307,6 +307,7 @@
         }
     });
 </script>
+@endpush
 @push('styles')
 <style>
     /* TomSelect styling */

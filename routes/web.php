@@ -1,14 +1,19 @@
 <?php
 
-use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\UserController;
-use App\Http\Controllers\PegawaiController;
-use App\Http\Controllers\SuratMasukController;
-use App\Http\Controllers\SuratKeluarController;
-use App\Http\Controllers\TahunArsipController;
+use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\DashboardKearsipanController;
+use App\Http\Controllers\DisposisiController;
+use App\Http\Controllers\KlasifikasiArsipController;
 use App\Http\Controllers\Kp4Controller;
-
+use App\Http\Controllers\PdfUtilityController;
+use App\Http\Controllers\PegawaiController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\SuratKeluarController;
+use App\Http\Controllers\SuratMasukController;
+use App\Http\Controllers\TahunArsipController;
+use App\Http\Controllers\TataNaskahController;
+use App\Http\Controllers\TemplateController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -22,16 +27,18 @@ Route::get('/', function () {
 })->name('home');
 
 // ── Public SEO routes (no auth required) ───────────────────────────────────
-Route::get('/kode-klasifikasi', [\App\Http\Controllers\KlasifikasiArsipController::class, 'publicIndex'])->name('public.klasifikasi');
-Route::get('/tata-naskah', [\App\Http\Controllers\TataNaskahController::class, 'publicIndex'])->name('public.tata-naskah');
+Route::get('/kode-klasifikasi', [KlasifikasiArsipController::class, 'publicIndex'])->name('public.klasifikasi');
+Route::get('/tata-naskah', [TataNaskahController::class, 'publicIndex'])->name('public.tata-naskah');
 
 Route::get('/sitemap.xml', function () {
     $content = view('seo.sitemap')->render();
+
     return response($content, 200)->header('Content-Type', 'application/xml');
 })->name('sitemap');
 
 Route::get('/robots.txt', function () {
     $content = view('seo.robots')->render();
+
     return response($content, 200)->header('Content-Type', 'text/plain');
 })->name('robots');
 
@@ -54,14 +61,14 @@ Route::get('/serve-file/{path}', function ($path) {
         if ($baseReal === false) {
             continue;
         }
-        $candidate = realpath($baseReal . DIRECTORY_SEPARATOR . $path);
+        $candidate = realpath($baseReal.DIRECTORY_SEPARATOR.$path);
         if ($candidate !== false
-            && str_starts_with($candidate, rtrim($baseReal, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR)) {
+            && str_starts_with($candidate, rtrim($baseReal, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR)) {
             $fullPath = $candidate;
             break;
         }
     }
-    if ($fullPath === null || !file_exists($fullPath)) {
+    if ($fullPath === null || ! file_exists($fullPath)) {
         abort(404, 'File tidak ditemukan.');
     }
     // Ekstrak filename untuk Content-Disposition header
@@ -84,8 +91,9 @@ Route::get('/serve-file/{path}', function ($path) {
     if ($content === false) {
         abort(500, 'Gagal membaca file.');
     }
+
     return response($content, 200)->header('Content-Type', $contentType)
-        ->header('Content-Disposition', 'inline; filename="' . $filename . '"');
+        ->header('Content-Disposition', 'inline; filename="'.$filename.'"');
 })->where('path', '.*')->name('file.serve');
 
 // ── Dashboard ──────────────────────────────────────────────────────────────
@@ -114,6 +122,7 @@ Route::middleware(['auth'])->group(function () {
 
     // Default dashboard (fallback)
     Route::get('/dashboard', [DashboardKearsipanController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard/statistik', [DashboardKearsipanController::class, 'statistik'])->name('dashboard.statistik');
     Route::get('/dashboard/export/excel', [DashboardKearsipanController::class, 'exportExcel'])->name('dashboard.export.excel');
     Route::get('/dashboard/export/pdf', [DashboardKearsipanController::class, 'exportPdf'])->name('dashboard.export.pdf');
     Route::get('/pembelajaran', [DashboardKearsipanController::class, 'pembelajaran'])->name('pembelajaran');
@@ -125,25 +134,25 @@ Route::middleware(['auth'])->group(function () {
 
     // ── Manajemen Pengguna (Super Admin only) ──────────────────────────────
     Route::middleware(['role:super_admin'])->prefix('pengguna')->name('users.')->group(function () {
-        Route::get('/',            [UserController::class, 'index'])->name('index');
-        Route::get('/tambah',      [UserController::class, 'create'])->name('create');
-        Route::post('/',           [UserController::class, 'store'])->name('store');
+        Route::get('/', [UserController::class, 'index'])->name('index');
+        Route::get('/tambah', [UserController::class, 'create'])->name('create');
+        Route::post('/', [UserController::class, 'store'])->name('store');
 
         Route::get('/{user}/edit', [UserController::class, 'edit'])->name('edit');
-        Route::put('/{user}',      [UserController::class, 'update'])->name('update');
-        Route::delete('/{user}',   [UserController::class, 'destroy'])->name('destroy');
+        Route::put('/{user}', [UserController::class, 'update'])->name('update');
+        Route::delete('/{user}', [UserController::class, 'destroy'])->name('destroy');
         Route::patch('/{user}/activate', [UserController::class, 'activate'])->name('activate');
     });
 
     // ── Audit Logs (Super Admin only) ─────────────────────────────────────
     Route::middleware(['role:super_admin'])->group(function () {
-        Route::get('audit-logs', [\App\Http\Controllers\AuditLogController::class, 'index'])->name('audit-logs.index');
+        Route::get('audit-logs', [AuditLogController::class, 'index'])->name('audit-logs.index');
     });
 
     // ── Klasifikasi Arsip & Tata Naskah (Data Master SIKD) ──────────────────
-    Route::get('klasifikasi-arsip/search', [\App\Http\Controllers\KlasifikasiArsipController::class, 'search'])->name('klasifikasi-arsip.search');
+    Route::get('klasifikasi-arsip/search', [KlasifikasiArsipController::class, 'search'])->name('klasifikasi-arsip.search');
     Route::middleware(['role:super_admin,tata_usaha'])->group(function () {
-        Route::resource('klasifikasi-arsip', \App\Http\Controllers\KlasifikasiArsipController::class);
+        Route::resource('klasifikasi-arsip', KlasifikasiArsipController::class);
     });
 
     // ── Data Pegawai (super_admin & tata_usaha) ─────────────────────────────
@@ -157,13 +166,13 @@ Route::middleware(['auth'])->group(function () {
     Route::get('surat-masuk/export/template', [SuratMasukController::class, 'downloadTemplate'])->name('surat-masuk.export.template');
     Route::get('surat-masuk/export/excel', [SuratMasukController::class, 'exportExcel'])->name('surat-masuk.export.excel');
     Route::get('surat-masuk/export/pdf', [SuratMasukController::class, 'exportPdf'])->name('surat-masuk.export.pdf');
+    Route::get('surat-masuk/search', [SuratMasukController::class, 'search'])->name('surat-masuk.search');
     Route::post('surat-masuk/import/excel', [SuratMasukController::class, 'importExcel'])->name('surat-masuk.import.excel');
     Route::resource('surat-masuk', SuratMasukController::class);
     Route::post('surat-masuk/{surat_masuk}/disposisi', [SuratMasukController::class, 'disposisi'])->name('surat-masuk.disposisi');
-    Route::get('surat-masuk/search', [SuratMasukController::class, 'search'])->name('surat-masuk.search');
     Route::resource('disposisi', DisposisiController::class);
     Route::post('disposisi/{disposisi}/proses', [DisposisiController::class, 'proses'])->name('disposisi.proses');
-  
+
     Route::get('surat-keluar/export/template', [SuratKeluarController::class, 'downloadTemplate'])->name('surat-keluar.export.template');
     Route::get('surat-keluar/search', [SuratKeluarController::class, 'search'])->name('surat-keluar.search');
     Route::get('surat-keluar/export/excel', [SuratKeluarController::class, 'exportExcel'])->name('surat-keluar.export.excel');
@@ -181,20 +190,20 @@ Route::middleware(['auth'])->group(function () {
 
     // ── Manajemen Template Tata Naskah ─────────────────────────────────────
     Route::middleware(['role:super_admin,tata_usaha'])->group(function () {
-        Route::post('templates/{id}/remove-file', [App\Http\Controllers\TemplateController::class, 'removeFile'])->name('templates.remove-file')->whereNumber('id');
-        Route::post('templates/{id}/remove-file-pdf', [App\Http\Controllers\TemplateController::class, 'removeFilePdf'])->name('templates.remove-file-pdf')->whereNumber('id');
-        Route::resource('templates', App\Http\Controllers\TemplateController::class);
+        Route::post('templates/{id}/remove-file', [TemplateController::class, 'removeFile'])->name('templates.remove-file')->whereNumber('id');
+        Route::post('templates/{id}/remove-file-pdf', [TemplateController::class, 'removeFilePdf'])->name('templates.remove-file-pdf')->whereNumber('id');
+        Route::resource('templates', TemplateController::class);
     });
 
     // ── Utilitas PDF ───────────────────────────────────────────────────────
     Route::prefix('pdf-utility')->name('pdf-utility.')->group(function () {
-        Route::get('/', [App\Http\Controllers\PdfUtilityController::class, 'index'])->name('index');
-        Route::get('/foto-ke-pdf', [App\Http\Controllers\PdfUtilityController::class, 'fotoKePdf'])->name('foto-ke-pdf');
-        Route::get('/word-ke-pdf', [App\Http\Controllers\PdfUtilityController::class, 'wordKePdf'])->name('word-ke-pdf');
-        Route::get('/gabung-pdf', [App\Http\Controllers\PdfUtilityController::class, 'gabungPdf'])->name('gabung-pdf');
-        Route::post('/images-to-pdf', [App\Http\Controllers\PdfUtilityController::class, 'imagesToPdf'])->name('images-to-pdf');
-        Route::post('/merge-pdfs', [App\Http\Controllers\PdfUtilityController::class, 'mergePdfs'])->name('merge-pdfs');
-        Route::post('/word-to-pdf', [App\Http\Controllers\PdfUtilityController::class, 'wordToPdf'])->name('word-to-pdf');
+        Route::get('/', [PdfUtilityController::class, 'index'])->name('index');
+        Route::get('/foto-ke-pdf', [PdfUtilityController::class, 'fotoKePdf'])->name('foto-ke-pdf');
+        Route::get('/word-ke-pdf', [PdfUtilityController::class, 'wordKePdf'])->name('word-ke-pdf');
+        Route::get('/gabung-pdf', [PdfUtilityController::class, 'gabungPdf'])->name('gabung-pdf');
+        Route::post('/images-to-pdf', [PdfUtilityController::class, 'imagesToPdf'])->name('images-to-pdf');
+        Route::post('/merge-pdfs', [PdfUtilityController::class, 'mergePdfs'])->name('merge-pdfs');
+        Route::post('/word-to-pdf', [PdfUtilityController::class, 'wordToPdf'])->name('word-to-pdf');
     });
 });
 

@@ -121,7 +121,7 @@
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">
-                            @foreach(\App\Models\Disposisi::with('suratMasuk', 'dariUser')->where('kepada_user_id', auth()->id())->where('status', '!=', 'selesai')->latest()->take(5)->get() as $disposisi)
+                            @forelse(\App\Models\Disposisi::with('suratMasuk', 'dariUser')->where('kepada_user_id', auth()->id())->where('status', '!=', 'selesai')->latest()->take(5)->get() as $disposisi)
                             <tr class="hover:bg-slate-50">
                                 <td class="py-3 text-sm text-slate-900">{{ $disposisi->suratMasuk->no_surat ?? '-' }}</td>
                                 <td class="py-3 text-sm text-slate-600 max-w-xs truncate">{{ $disposisi->suratMasuk->perihal ?? '-' }}</td>
@@ -141,7 +141,7 @@
                             <tr>
                                 <td colspan="5" class="py-8 text-center text-slate-500">Tidak ada disposisi yang perlu ditindaklanjuti</td>
                             </tr>
-                            @endforeach
+                            @endforelse
                         </tbody>
                     </table>
                 </div>

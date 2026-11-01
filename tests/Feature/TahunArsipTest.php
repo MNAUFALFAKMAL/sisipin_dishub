@@ -81,13 +81,13 @@ class TahunArsipTest extends TestCase
         $admin = User::factory()->superAdmin()->create();
         TahunArsip::create(['tahun' => 2026]);
         SuratMasuk::create([
-            'no_surat'       => '900/1/SM',
-            'tanggal_surat'  => '2026-03-01',
+            'no_surat' => '900/1/SM',
+            'tanggal_surat' => '2026-03-01',
             'tanggal_terima' => '2026-03-02',
-            'pengirim'       => 'Dinas PU',
-            'perihal'        => 'Undangan Rapat',
-            'jenis_surat'    => 'Surat Masuk',
-            'tahun'          => 2026,
+            'pengirim' => 'Dinas PU',
+            'perihal' => 'Undangan Rapat',
+            'jenis_surat' => 'Surat Masuk',
+            'tahun' => 2026,
         ]);
 
         $response = $this->actingAs($admin)->from('/dashboard')

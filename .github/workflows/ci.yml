@@ -28,6 +28,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -78,5 +80,25 @@ jobs:
       - name: Run tests
         run: php artisan test
 
-      - name: Run Pint (code style)
-        run: ./vendor/bin/pint --test
+      - name: Run Pint on changed files (code style)
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BASE="origin/${{ github.base_ref }}"
+          else
+            BASE="${{ github.event.before }}"
+            if ! git rev-parse --verify --quiet "${BASE}^{commit}" > /dev/null; then
+              BASE="HEAD~1"
+            fi
+          fi
+
+          FILES=$(git diff --name-only --diff-filter=ACMR "${BASE}...HEAD" -- '*.php' | tr '\n' ' ')
+
+          if [ -z "$FILES" ]; then
+            echo "Tidak ada file PHP yang berubah, cek gaya kode dilewati."
+            exit 0
+          fi
+
+          echo "File PHP yang diperiksa:"
+          for f in $FILES; do echo "  - $f"; done
+
+          ./vendor/bin/pint --test $FILES

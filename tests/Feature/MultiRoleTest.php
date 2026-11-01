@@ -25,7 +25,7 @@ class MultiRoleTest extends TestCase
     {
         $tu = User::factory()->tataUsaha()->create();
 
-        $responseSurat = $this->actingAs($tu)->get('/surat-masuk?jenis_surat=Surat+Masuk&tahun=' . date('Y'));
+        $responseSurat = $this->actingAs($tu)->get('/surat-masuk?jenis_surat=Surat+Masuk&tahun='.date('Y'));
         $responseSurat->assertStatus(200);
 
         $responseKlasifikasi = $this->actingAs($tu)->get('/klasifikasi-arsip');

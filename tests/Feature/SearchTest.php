@@ -2,11 +2,12 @@
 
 namespace Tests\Feature;
 
-use App\Models\SuratMasuk;
-use App\Models\SuratKeluar;
-use App\Models\User;
-use App\Models\KlasifikasiArsip;
 use App\Models\Bidang;
+use App\Models\KlasifikasiArsip;
+use App\Models\SuratKeluar;
+use App\Models\SuratMasuk;
+use App\Models\TahunArsip;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -15,13 +16,18 @@ class SearchTest extends TestCase
     use RefreshDatabase;
 
     protected User $user;
+
     protected KlasifikasiArsip $klasifikasi;
+
     protected Bidang $bidang;
 
     protected function setUp(): void
     {
         parent::setUp();
         $this->user = User::factory()->tataUsaha()->create();
+
+        // Surat requests require tahun to exist in tahun_arsips.
+        TahunArsip::create(['tahun' => (int) date('Y')]);
 
         $this->klasifikasi = KlasifikasiArsip::factory()->create([
             'kode' => '000.1',
@@ -37,37 +43,37 @@ class SearchTest extends TestCase
     protected function getValidSuratMasukData(array $overrides = []): array
     {
         return array_merge([
-            'jenis_surat'     => 'Surat Masuk',
-            'tahun'           => date('Y'),
-            'no_agenda'       => '1',
-            'no_surat'        => '001/TEST/' . date('Y'),
-            'tanggal_surat'   => date('Y-m-d'),
-            'tanggal_terima'  => date('Y-m-d'),
-            'pengirim'        => 'Instansi Test',
-            'perihal'         => 'Perihal Test',
-            'isi_ringkas'     => 'Isi ringkas test',
-            'klasifikasi_id'  => $this->klasifikasi->id,
-            'bidang_tujuan_id'=> $this->bidang->id,
-            'keterangan'      => 'Keterangan test',
+            'jenis_surat' => 'Surat Masuk',
+            'tahun' => date('Y'),
+            'no_agenda' => '1',
+            'no_surat' => '001/TEST/'.date('Y'),
+            'tanggal_surat' => date('Y-m-d'),
+            'tanggal_terima' => date('Y-m-d'),
+            'pengirim' => 'Instansi Test',
+            'perihal' => 'Perihal Test',
+            'isi_ringkas' => 'Isi ringkas test',
+            'klasifikasi_id' => $this->klasifikasi->id,
+            'bidang_tujuan_id' => $this->bidang->id,
+            'keterangan' => 'Keterangan test',
         ], $overrides);
     }
 
     protected function getValidSuratKeluarData(array $overrides = []): array
     {
         return array_merge([
-            'jenis_surat'      => 'SPT',
-            'tahun'            => date('Y'),
-            'no_agenda'        => '1',
-            'no_surat'         => '800/1/V.13/' . date('Y'),
-            'tanggal_surat'    => date('Y-m-d'),
-            'tanggal_terima'   => date('Y-m-d'),
-            'tujuan'           => 'Instansi Test',
-            'perihal'          => 'Perihal Test',
-            'isi_ringkas'      => 'Isi ringkas test',
-            'klasifikasi_id'   => $this->klasifikasi->id,
-            'bidang_id'        => $this->bidang->id,
-            'penandatangan'    => 'Kepala Dinas Perhubungan',
-            'keterangan'       => 'Keterangan test',
+            'jenis_surat' => 'SPT',
+            'tahun' => date('Y'),
+            'no_agenda' => '1',
+            'no_surat' => '800/1/V.13/'.date('Y'),
+            'tanggal_surat' => date('Y-m-d'),
+            'tanggal_terima' => date('Y-m-d'),
+            'tujuan' => 'Instansi Test',
+            'perihal' => 'Perihal Test',
+            'isi_ringkas' => 'Isi ringkas test',
+            'klasifikasi_id' => $this->klasifikasi->id,
+            'bidang_id' => $this->bidang->id,
+            'penandatangan' => 'Kepala Dinas Perhubungan',
+            'keterangan' => 'Keterangan test',
         ], $overrides);
     }
 
@@ -88,9 +94,9 @@ class SearchTest extends TestCase
         $response->assertOk();
         $response->assertJsonStructure([
             'data' => [
-                '*' => ['id', 'no_agenda', 'no_surat', 'perihal', 'pengirim', 'status_disposisi']
+                '*' => ['id', 'no_agenda', 'no_surat', 'perihal', 'pengirim', 'status_disposisi'],
             ],
-            'total'
+            'total',
         ]);
     }
 
@@ -98,6 +104,8 @@ class SearchTest extends TestCase
     {
         $data = $this->getValidSuratMasukData(['no_agenda' => '1', 'status_disposisi' => 'selesai']);
         $this->actingAs($this->user)->post(route('surat-masuk.store'), $data);
+        // Store always starts a new surat as "belum"; simulate the disposition workflow.
+        SuratMasuk::where('no_agenda', '1')->update(['status_disposisi' => 'selesai']);
 
         $data2 = $this->getValidSuratMasukData(['no_agenda' => '2', 'status_disposisi' => 'belum']);
         $this->actingAs($this->user)->post(route('surat-masuk.store'), $data2);
@@ -113,7 +121,7 @@ class SearchTest extends TestCase
 
     public function test_surat_masuk_search_filters_by_bidang()
     {
-        $bidang2 = \App\Models\Bidang::factory()->create(['kode_bidang' => 'BB', 'nama_bidang' => 'Bidang Dua']);
+        $bidang2 = Bidang::factory()->create(['kode_bidang' => 'BB', 'nama_bidang' => 'Bidang Dua']);
 
         $data = $this->getValidSuratMasukData(['no_agenda' => '1', 'bidang_tujuan_id' => $this->bidang->id]);
         $this->actingAs($this->user)->post(route('surat-masuk.store'), $data);
@@ -122,7 +130,7 @@ class SearchTest extends TestCase
         $this->actingAs($this->user)->post(route('surat-masuk.store'), $data2);
 
         $response = $this->actingAs($this->user)
-            ->get('/surat-masuk/search?bidang_id=' . $this->bidang->id);
+            ->get('/surat-masuk/search?bidang_id='.$this->bidang->id);
 
         $response->assertOk();
         $data = $response->json();
@@ -146,9 +154,9 @@ class SearchTest extends TestCase
         $response->assertOk();
         $response->assertJsonStructure([
             'data' => [
-                '*' => ['id', 'no_agenda', 'no_surat', 'perihal', 'tujuan', 'status']
+                '*' => ['id', 'no_agenda', 'no_surat', 'perihal', 'tujuan', 'status'],
             ],
-            'total'
+            'total',
         ]);
     }
 
@@ -171,10 +179,12 @@ class SearchTest extends TestCase
 
     public function test_surat_keluar_search_filters_by_status()
     {
-        $data = $this->getValidSuratKeluarData(['no_agenda' => '1', 'status' => 'selesai']);
+        $data = $this->getValidSuratKeluarData(['no_agenda' => '1']);
         $this->actingAs($this->user)->post(route('surat-keluar.store'), $data);
+        // Surat keluar baru selalu berstatus draft; simulasikan perubahan status.
+        SuratKeluar::where('no_agenda', '1')->update(['status' => 'selesai']);
 
-        $data2 = $this->getValidSuratKeluarData(['no_agenda' => '2', 'status' => 'draft']);
+        $data2 = $this->getValidSuratKeluarData(['no_agenda' => '2']);
         $this->actingAs($this->user)->post(route('surat-keluar.store'), $data2);
 
         $response = $this->actingAs($this->user)
