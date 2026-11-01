@@ -16,7 +16,7 @@
 
     <div class="max-w-3xl mx-auto">
         <x-card>
-            <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-2">Upload Template .docx</h3>
+            <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-2">Upload Template .docx / .pdf</h3>
             <p class="text-sm text-gray-600 dark:text-gray-400 mb-6">Unggah template naskah dinas untuk ditampilkan di katalog Tata Naskah Dinas.</p>
 
             <form action="{{ route('templates.store') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
@@ -58,7 +58,7 @@
 
                 {{-- File .docx --}}
                 <div>
-                    <label class="form-label">File Template (.docx)</label>
+                    <label class="form-label">File Template (.docx / .pdf)</label>
                     <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg hover:border-blue-500 dark:hover:border-blue-400 transition-colors cursor-pointer" data-upload-area="file-input">
                         <div class="space-y-1 text-center" id="upload-area-docx">
                             <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-10 w-10 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -68,9 +68,9 @@
                                 <span class="font-medium text-blue-600 dark:text-blue-400">Klik untuk upload</span>
                                 <span class="text-xs">atau seret file ke sini</span>
                             </div>
-                            <p class="text-xs text-gray-500 dark:text-gray-500">Format: .docx</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-500">Format: .docx atau .pdf</p>
                         </div>
-                        <input id="file-input" name="file" type="file" accept=".docx" class="sr-only" required data-file-input data-name-id="file-name" data-area-id="upload-area-docx">
+                        <input id="file-input" name="file" type="file" accept=".docx,.pdf" class="sr-only" required data-file-input data-name-id="file-name" data-area-id="upload-area-docx">
                     </div>
                     <p id="file-name" class="text-sm text-green-600 dark:text-green-400 mt-2 hidden"></p>
                     @error('file')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
