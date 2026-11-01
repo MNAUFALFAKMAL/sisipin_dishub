@@ -2,19 +2,24 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\ServiceProvider;
+use App\Listeners\LogAuthenticationActivity;
+use App\Models\Disposisi;
+use App\Models\SuratKeluar;
+use App\Models\SuratMasuk;
+use App\Models\TahunArsip;
+use App\Models\User;
+use App\Policies\DisposisiPolicy;
+use App\Policies\SuratKeluarPolicy;
+use App\Policies\SuratMasukPolicy;
+use App\Policies\UserPolicy;
+use Illuminate\Auth\Events\Login;
+use Illuminate\Auth\Events\Logout;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\View;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
-use App\Models\User;
-use App\Models\SuratMasuk;
-use App\Models\SuratKeluar;
-use App\Models\Disposisi;
-use App\Policies\UserPolicy;
-use App\Policies\SuratMasukPolicy;
-use App\Policies\SuratKeluarPolicy;
-use App\Policies\DisposisiPolicy;
+use Illuminate\Support\Facades\View;
+use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -39,12 +44,16 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(SuratKeluar::class, SuratKeluarPolicy::class);
         Gate::policy(Disposisi::class, DisposisiPolicy::class);
 
+        // Catat aktivitas login/logout ke audit log
+        Event::listen(Login::class, LogAuthenticationActivity::class);
+        Event::listen(Logout::class, LogAuthenticationActivity::class);
+
         // Daftar tahun untuk dropdown navigasi sidebar (Surat Menyurat → Tahun)
         View::composer('layouts.sidebar', function ($view) {
             $isSqlite = DB::connection()->getDriverName() === 'sqlite';
             $yearExpr = $isSqlite
                 ? "CAST(strftime('%Y', COALESCE(tanggal_terima, created_at)) AS INTEGER)"
-                : "YEAR(COALESCE(tanggal_terima, created_at))";
+                : 'YEAR(COALESCE(tanggal_terima, created_at))';
 
             $tahunDariTabel = TahunArsip::query()->pluck('tahun');
             $tahunDariMasuk = SuratMasuk::query()

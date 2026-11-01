@@ -43,6 +43,10 @@ trait LogsActivity
             if (empty($newValues)) {
                 return;
             }
+
+            // Model dapat memberi label aktivitas yang lebih spesifik
+            // (mis. perubahan role pengguna dicatat sebagai "role_changed").
+            $activity = static::activityName($activity, $model);
         } elseif ($activity === 'created') {
             $newValues = $model->getAttributes();
             foreach ($sensitiveFields as $field) {
@@ -65,5 +69,14 @@ trait LogsActivity
             'ip_address' => request()->ip(),
             'user_agent' => request()->userAgent(),
         ]);
+    }
+
+    /**
+     * Tentukan label aktivitas yang dicatat. Model dapat meng-override
+     * method ini untuk memberi label khusus (mis. "role_changed").
+     */
+    protected static function activityName(string $activity, $model): string
+    {
+        return $activity;
     }
 }
